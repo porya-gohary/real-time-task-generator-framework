@@ -1,0 +1,10 @@
+path: "output"
+period_distribution: "automotive"
+num_sets: 10
+tasks: 5
+utilization: 0.6
+exec_variation: 0.1
+jitter: 0.1
+constant_jitter: false
+is_preemptive: true
+max_jobs: 1000
