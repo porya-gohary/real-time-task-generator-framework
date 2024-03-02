@@ -39,6 +39,7 @@ func createTaskSet(path string, nTasks int, seed int64, totalUtilization float64
 		wcets[i] = int(float64(wcet) / float64(scale))
 		periods[i] = int(float64(periods[i]) / float64(scale))
 	}
+
 	// create the whole path
 	err := os.MkdirAll(filepath.Dir(path), os.ModePerm)
 	file, err := os.Create(path)
@@ -83,7 +84,8 @@ func createTaskSet(path string, nTasks int, seed int64, totalUtilization float64
 	return nil
 }
 
-func createTaskSets(path string, numSets int, tasks int, utilization float64, periodDistribution string, execVariation float64, jitter float64, isPreemptive bool, constantJitter bool, maxJobs int) {
+// CreateTaskSets creates a number of task sets and writes them to the specified path
+func CreateTaskSets(path string, numSets int, tasks int, utilization float64, periodDistribution string, execVariation float64, jitter float64, isPreemptive bool, constantJitter bool, maxJobs int) {
 	for i := 0; i < numSets; i++ {
 		file := fmt.Sprintf("%s_%d.csv", periodDistribution, i)
 		taskSetPath := filepath.Join(path, file)
@@ -99,6 +101,7 @@ func createTaskSets(path string, numSets int, tasks int, utilization float64, pe
 	}
 }
 
+// CreateTaskSetsParallel creates task sets in parallel using the given parameters
 func CreateTaskSetsParallel(path string, numSets int, tasks int, utilization float64, periodDistribution string, execVariation float64, jitter float64, isPreemptive bool, constantJitter bool, maxJobs int) {
 	var wg sync.WaitGroup
 	wg.Add(numSets)

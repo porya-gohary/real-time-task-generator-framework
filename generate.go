@@ -21,6 +21,7 @@ type Config struct {
 	ConstantJitter     bool    `yaml:"constant_jitter"`
 	IsPreemptive       bool    `yaml:"is_preemptive"`
 	MaxJobs            int     `yaml:"max_jobs"`
+	RunParallel        bool    `yaml:"run_parallel"`
 }
 
 func main() {
@@ -43,6 +44,15 @@ func main() {
 	}
 
 	//	then we need to create the task sets
-	taskGenertor.CreateTaskSetsParallel(config.Path, config.NumSets, config.Tasks, config.Utilization, config.PeriodDistribution, config.ExecVariation, config.Jitter, config.IsPreemptive, config.ConstantJitter, config.MaxJobs)
+	// 	we can run the task generation in parallel if the config file specifies it
+	if config.RunParallel {
+		taskGenertor.CreateTaskSetsParallel(config.Path, config.NumSets, config.Tasks,
+			config.Utilization, config.PeriodDistribution, config.ExecVariation, config.Jitter, config.IsPreemptive,
+			config.ConstantJitter, config.MaxJobs)
+	} else {
+		taskGenertor.CreateTaskSets(config.Path, config.NumSets, config.Tasks,
+			config.Utilization, config.PeriodDistribution, config.ExecVariation, config.Jitter, config.IsPreemptive,
+			config.ConstantJitter, config.MaxJobs)
+	}
 
 }
