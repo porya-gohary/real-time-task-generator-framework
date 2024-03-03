@@ -1,10 +1,13 @@
 path: "output"
 period_distribution: "automotive"
-num_sets: 10
+num_sets: 1000
 tasks: 5
-utilization: 0.6
+utilization: 0.8
 exec_variation: 0.1
 jitter: 0.1
 constant_jitter: false
 is_preemptive: true
 max_jobs: 1000
+run_parallel: false
+# Verbose level: 0 - 4 (0: no output, 4: all output)
+verbose: 0

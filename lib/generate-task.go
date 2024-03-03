@@ -3,16 +3,22 @@ package lib
 import (
 	"encoding/csv"
 	"fmt"
+	"github.com/schollz/progressbar/v3"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"strconv"
 	"sync"
+	"task-generator/lib/common"
 	"time"
 )
 
+var logger *common.VerboseLogger
+var bar *progressbar.ProgressBar
+
 // create a task set
-func createTaskSet(path string, nTasks int, seed int64, totalUtilization float64, method string, alpha float64, jitter float64, isPreemptive bool, constantJitter bool, maxJobs int) error {
+func createTaskSet(path string, nTasks int, seed int64, totalUtilization float64, method string, alpha float64,
+	jitter float64, isPreemptive bool, constantJitter bool, maxJobs int) error {
 	rand.Seed(seed)
 
 	var periods []int
@@ -85,26 +91,37 @@ func createTaskSet(path string, nTasks int, seed int64, totalUtilization float64
 }
 
 // CreateTaskSets creates a number of task sets and writes them to the specified path
-func CreateTaskSets(path string, numSets int, tasks int, utilization float64, periodDistribution string, execVariation float64, jitter float64, isPreemptive bool, constantJitter bool, maxJobs int) {
+func CreateTaskSets(path string, numSets int, tasks int, utilization float64, periodDistribution string,
+	execVariation float64, jitter float64, isPreemptive bool, constantJitter bool, maxJobs int, lr *common.VerboseLogger) {
+	logger = lr
+	if lr.GetVerboseLevel() == common.VerboseLevelNone {
+		bar = progressbar.Default(int64(numSets))
+	}
 	for i := 0; i < numSets; i++ {
 		file := fmt.Sprintf("%s_%d.csv", periodDistribution, i)
 		taskSetPath := filepath.Join(path, file)
 		if _, err := os.Stat(taskSetPath); os.IsNotExist(err) {
-			if err := createTaskSet(taskSetPath, tasks, time.Now().UnixNano(), utilization, periodDistribution, execVariation, jitter, isPreemptive, constantJitter, maxJobs); err != nil {
+			if err := createTaskSet(taskSetPath, tasks, time.Now().UnixNano(), utilization, periodDistribution,
+				execVariation, jitter, isPreemptive, constantJitter, maxJobs); err != nil {
 				fmt.Println(err)
 			} else {
-				fmt.Printf("%s created\n", taskSetPath)
+				logger.LogInfo(fmt.Sprintf("%s created", taskSetPath))
 			}
 		} else {
-			fmt.Printf("%s exists\n", taskSetPath)
+			logger.LogInfo(fmt.Sprintf("%s exists", taskSetPath))
+		}
+		if lr.GetVerboseLevel() == common.VerboseLevelNone {
+			bar.Add(1)
 		}
 	}
 }
 
 // CreateTaskSetsParallel creates task sets in parallel using the given parameters
-func CreateTaskSetsParallel(path string, numSets int, tasks int, utilization float64, periodDistribution string, execVariation float64, jitter float64, isPreemptive bool, constantJitter bool, maxJobs int) {
+func CreateTaskSetsParallel(path string, numSets int, tasks int, utilization float64, periodDistribution string,
+	execVariation float64, jitter float64, isPreemptive bool, constantJitter bool, maxJobs int, lr *common.VerboseLogger) {
 	var wg sync.WaitGroup
 	wg.Add(numSets)
+	logger = lr
 
 	for i := 0; i < numSets; i++ {
 		go func(setIndex int) {
@@ -112,13 +129,14 @@ func CreateTaskSetsParallel(path string, numSets int, tasks int, utilization flo
 			file := fmt.Sprintf("%s_%d.csv", periodDistribution, setIndex)
 			taskSetPath := filepath.Join(path, file)
 			if _, err := os.Stat(taskSetPath); os.IsNotExist(err) {
-				if err := createTaskSet(taskSetPath, tasks, time.Now().UnixNano(), utilization, periodDistribution, execVariation, jitter, isPreemptive, constantJitter, maxJobs); err != nil {
+				if err := createTaskSet(taskSetPath, tasks, time.Now().UnixNano(), utilization, periodDistribution,
+					execVariation, jitter, isPreemptive, constantJitter, maxJobs); err != nil {
 					fmt.Println(err)
 				} else {
-					fmt.Printf("%s created\n", taskSetPath)
+					logger.LogInfo(fmt.Sprintf("%s created", taskSetPath))
 				}
 			} else {
-				fmt.Printf("%s exists\n", taskSetPath)
+				logger.LogInfo(fmt.Sprintf("%s exists", taskSetPath))
 			}
 		}(i)
 	}

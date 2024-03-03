@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	taskGenertor "task-generator/lib"
+	"task-generator/lib/common"
 )
 
 // Config represents the structure of the YAML configuration file
@@ -22,7 +23,10 @@ type Config struct {
 	IsPreemptive       bool    `yaml:"is_preemptive"`
 	MaxJobs            int     `yaml:"max_jobs"`
 	RunParallel        bool    `yaml:"run_parallel"`
+	Verbose            int     `yaml:"verbose"`
 }
+
+var logger *common.VerboseLogger
 
 func main() {
 	//	first we need to read the config file
@@ -43,16 +47,30 @@ func main() {
 		os.Exit(1)
 	}
 
+	//Set verbose level
+	if config.Verbose <= 4 && config.Verbose >= 0 {
+		// Create a verbose logger with a verbosity level of Info.
+		logger = common.NewVerboseLogger("", config.Verbose)
+	} else {
+		fmt.Println("Error: Invalid verbose level")
+		os.Exit(1)
+	}
+
+	// Print a warning that the automotive method is not consider number of tasks
+	if config.PeriodDistribution == "automotive" {
+		logger.LogWarning("The automotive method does not consider the number of tasks")
+	}
+
 	//	then we need to create the task sets
 	// 	we can run the task generation in parallel if the config file specifies it
 	if config.RunParallel {
 		taskGenertor.CreateTaskSetsParallel(config.Path, config.NumSets, config.Tasks,
 			config.Utilization, config.PeriodDistribution, config.ExecVariation, config.Jitter, config.IsPreemptive,
-			config.ConstantJitter, config.MaxJobs)
+			config.ConstantJitter, config.MaxJobs, logger)
 	} else {
 		taskGenertor.CreateTaskSets(config.Path, config.NumSets, config.Tasks,
 			config.Utilization, config.PeriodDistribution, config.ExecVariation, config.Jitter, config.IsPreemptive,
-			config.ConstantJitter, config.MaxJobs)
+			config.ConstantJitter, config.MaxJobs, logger)
 	}
 
 }
