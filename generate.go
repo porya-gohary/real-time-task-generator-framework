@@ -16,6 +16,7 @@ type Config struct {
 	UtilDistribution   string  `yaml:"utilization_distribution"`
 	PeriodDistribution string  `yaml:"period_distribution"`
 	PeriodRange        []int   `yaml:"period_range"`
+	Periods            []int   `yaml:"periods"`
 	NumSets            int     `yaml:"num_sets"`
 	Tasks              int     `yaml:"tasks"`
 	Utilization        float64 `yaml:"utilization"`
@@ -71,12 +72,12 @@ func main() {
 	// 	we can run the task generation in parallel if the config file specifies it
 	if config.RunParallel {
 		taskGenertor.CreateTaskSetsParallel(config.Path, config.NumSets, config.Tasks,
-			config.Utilization, config.UtilDistribution, config.PeriodDistribution, config.PeriodRange, config.ExecVariation,
-			config.Jitter, config.IsPreemptive, config.ConstantJitter, config.MaxJobs, logger)
+			config.Utilization, config.UtilDistribution, config.PeriodDistribution, config.PeriodRange, config.Periods,
+			config.ExecVariation, config.Jitter, config.IsPreemptive, config.ConstantJitter, config.MaxJobs, logger)
 	} else {
 		taskGenertor.CreateTaskSets(config.Path, config.NumSets, config.Tasks,
-			config.Utilization, config.UtilDistribution, config.PeriodDistribution, config.PeriodRange, config.ExecVariation,
-			config.Jitter, config.IsPreemptive, config.ConstantJitter, config.MaxJobs, logger)
+			config.Utilization, config.UtilDistribution, config.PeriodDistribution, config.PeriodRange, config.Periods,
+			config.ExecVariation, config.Jitter, config.IsPreemptive, config.ConstantJitter, config.MaxJobs, logger)
 	}
 
 }

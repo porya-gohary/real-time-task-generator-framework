@@ -4,9 +4,11 @@ path: "output"
 utilization_distribution: "uunifast"
 # Mathematical distribution to generate periods: "uniform", "log-uniform",
 # "uniform-discrete" ,"log-uniform-discrete", "automotive"
-period_distribution: "log-uniform"
+period_distribution: "uniform-discrete"
 # Minimum and maximum period for the period distribution
-period_range: [10, 1000]
+period_range: [1000, 10000]
+# Discrete periods for the period distribution
+periods: [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
 # Number of task sets
 num_sets: 100
 # Number of tasks in the task set
@@ -24,6 +26,6 @@ is_preemptive: true
 # maximum number of jobs per task set
 max_jobs: 1000
 # Run task set generation in parallel
-run_parallel: false
+run_parallel: true
 # Verbose level: 0 - 4 (0: no output, 4: all output)
-verbose: 4
+verbose: 0

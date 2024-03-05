@@ -12,6 +12,11 @@ type Task struct {
 	PE       int
 }
 
+func (t *Task) String() string {
+	return "{ " + t.Name + " " + string(t.Jitter) + " " + string(t.BCET) + " " + string(t.WCET) +
+		" " + string(t.Period) + " " + string(t.Deadline) + " " + string(t.PE) + " }"
+}
+
 type TaskSet []*Task
 
 // SortByPeriod function to sort tasks by period

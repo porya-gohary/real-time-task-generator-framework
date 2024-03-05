@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"sync"
 	"task-generator/lib/common"
@@ -18,7 +19,7 @@ var bar *progressbar.ProgressBar
 
 // create a task set
 func createTaskSet(path string, nTasks int, seed int64, totalUtilization float64, utilDist string, periodDist string,
-	periodRange []int, alpha float64, jitter float64, isPreemptive bool, constantJitter bool, maxJobs int) error {
+	periodRange []int, disPeriods []int, alpha float64, jitter float64, isPreemptive bool, constantJitter bool, maxJobs int) error {
 	rand.Seed(seed)
 
 	tasks := common.TaskSet{}
@@ -52,20 +53,21 @@ func createTaskSet(path string, nTasks int, seed int64, totalUtilization float64
 		} else if periodDist == "log-uniform" {
 			// 2. Log-uniform distribution
 			periods = generatePeriodsLogUniform(nTasks, float64(periodRange[0]), float64(periodRange[1]))
+		} else if periodDist == "uniform-discrete" {
+			// 3. Uniform discrete distribution
+			periods = generatePeriodsUniformDiscrete(nTasks, float64(periodRange[0]), float64(periodRange[1]), disPeriods)
+		} else if periodDist == "log-uniform-discrete" {
+			// 4. Log-uniform discrete distribution
+			periods = generatePeriodsLogUniformDiscrete(nTasks, float64(periodRange[0]), float64(periodRange[1]), disPeriods)
 		} else if periodDist == "automotive" {
 			// 5. Automotive method
 			tasks := generateAutomotiveTaskSet(totalUtilization)
 			for _, task := range tasks {
 				periods = append(periods, task[0])
 			}
+		} else {
+			logger.LogFatal(fmt.Sprintf("Unknown period distribution: %s", periodDist))
 		}
-		//else {
-		//	var err error
-		//	periods, wcets, err = generateLogUniformTaskSet(nTasks, totalUtilization, isPreemptive, maxJobs)
-		//	if err != nil {
-		//		return err
-		//	}
-		//}
 
 		scale := 10
 		for i, u := range util {
@@ -86,6 +88,7 @@ func createTaskSet(path string, nTasks int, seed int64, totalUtilization float64
 		for _, task := range tasks {
 			if task.WCET == 0 {
 				flag = false
+				logger.LogInfo("Regenerating task set because of zero WCET")
 				break
 			}
 
@@ -140,8 +143,12 @@ func createTaskSet(path string, nTasks int, seed int64, totalUtilization float64
 
 // CreateTaskSets creates a number of task sets and writes them to the specified path
 func CreateTaskSets(path string, numSets int, tasks int, utilization float64, utilDistribution string,
-	periodDistribution string, periodRange []int, execVariation float64, jitter float64, isPreemptive bool,
+	periodDistribution string, periodRange []int, disPeriods []int, execVariation float64, jitter float64, isPreemptive bool,
 	constantJitter bool, maxJobs int, lr *common.VerboseLogger) {
+	// sort disPeriods
+	sort.Slice(disPeriods, func(i, j int) bool {
+		return disPeriods[i] < disPeriods[j]
+	})
 	logger = lr
 	if lr.GetVerboseLevel() == common.VerboseLevelNone {
 		bar = progressbar.Default(int64(numSets))
@@ -151,7 +158,8 @@ func CreateTaskSets(path string, numSets int, tasks int, utilization float64, ut
 		taskSetPath := filepath.Join(path, file)
 		if _, err := os.Stat(taskSetPath); os.IsNotExist(err) {
 			if err := createTaskSet(taskSetPath, tasks, time.Now().UnixNano(), utilization, utilDistribution,
-				periodDistribution, periodRange, execVariation, jitter, isPreemptive, constantJitter, maxJobs); err != nil {
+				periodDistribution, periodRange, disPeriods, execVariation, jitter,
+				isPreemptive, constantJitter, maxJobs); err != nil {
 				fmt.Println(err)
 			} else {
 				logger.LogInfo(fmt.Sprintf("%s created", taskSetPath))
@@ -167,8 +175,12 @@ func CreateTaskSets(path string, numSets int, tasks int, utilization float64, ut
 
 // CreateTaskSetsParallel creates task sets in parallel using the given parameters
 func CreateTaskSetsParallel(path string, numSets int, tasks int, utilization float64, utilDistribution string,
-	periodDistribution string, periodRange []int, execVariation float64, jitter float64, isPreemptive bool,
+	periodDistribution string, periodRange []int, disPeriods []int, execVariation float64, jitter float64, isPreemptive bool,
 	constantJitter bool, maxJobs int, lr *common.VerboseLogger) {
+	// sort disPeriods
+	sort.Slice(disPeriods, func(i, j int) bool {
+		return disPeriods[i] < disPeriods[j]
+	})
 	var wg sync.WaitGroup
 	wg.Add(numSets)
 	logger = lr
@@ -180,7 +192,7 @@ func CreateTaskSetsParallel(path string, numSets int, tasks int, utilization flo
 			taskSetPath := filepath.Join(path, file)
 			if _, err := os.Stat(taskSetPath); os.IsNotExist(err) {
 				if err := createTaskSet(taskSetPath, tasks, time.Now().UnixNano(), utilization, utilDistribution,
-					periodDistribution, periodRange, execVariation, jitter, isPreemptive,
+					periodDistribution, periodRange, disPeriods, execVariation, jitter, isPreemptive,
 					constantJitter, maxJobs); err != nil {
 					fmt.Println(err)
 				} else {
