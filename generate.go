@@ -13,7 +13,9 @@ import (
 // Config represents the structure of the YAML configuration file
 type Config struct {
 	Path               string  `yaml:"path"`
+	UtilDistribution   string  `yaml:"utilization_distribution"`
 	PeriodDistribution string  `yaml:"period_distribution"`
+	PeriodRange        []int   `yaml:"period_range"`
 	NumSets            int     `yaml:"num_sets"`
 	Tasks              int     `yaml:"tasks"`
 	Utilization        float64 `yaml:"utilization"`
@@ -57,20 +59,24 @@ func main() {
 	}
 
 	// Print a warning that the automotive method is not consider number of tasks
-	if config.PeriodDistribution == "automotive" {
+	if config.PeriodDistribution == "automotive" && config.UtilDistribution == "automotive" {
 		logger.LogWarning("The automotive method does not consider the number of tasks")
+	}
+	// Print a fatal error if the period distribution is automotive and the utilization distribution is not automotive
+	if config.UtilDistribution == "automotive" && config.PeriodDistribution != "automotive" {
+		logger.LogFatal("The utilization distribution is automotive but the period distribution is not automotive")
 	}
 
 	//	then we need to create the task sets
 	// 	we can run the task generation in parallel if the config file specifies it
 	if config.RunParallel {
 		taskGenertor.CreateTaskSetsParallel(config.Path, config.NumSets, config.Tasks,
-			config.Utilization, config.PeriodDistribution, config.ExecVariation, config.Jitter, config.IsPreemptive,
-			config.ConstantJitter, config.MaxJobs, logger)
+			config.Utilization, config.UtilDistribution, config.PeriodDistribution, config.PeriodRange, config.ExecVariation,
+			config.Jitter, config.IsPreemptive, config.ConstantJitter, config.MaxJobs, logger)
 	} else {
 		taskGenertor.CreateTaskSets(config.Path, config.NumSets, config.Tasks,
-			config.Utilization, config.PeriodDistribution, config.ExecVariation, config.Jitter, config.IsPreemptive,
-			config.ConstantJitter, config.MaxJobs, logger)
+			config.Utilization, config.UtilDistribution, config.PeriodDistribution, config.PeriodRange, config.ExecVariation,
+			config.Jitter, config.IsPreemptive, config.ConstantJitter, config.MaxJobs, logger)
 	}
 
 }

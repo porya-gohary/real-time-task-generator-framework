@@ -1,13 +1,29 @@
+# Output path for the generated task sets
 path: "output"
-period_distribution: "automotive"
-num_sets: 1000
+# Utilization distribution to generate task sets: "uunifast", "rand-fixed-sum", "automotive"
+utilization_distribution: "uunifast"
+# Mathematical distribution to generate periods: "uniform", "log-uniform",
+# "uniform-discrete" ,"log-uniform-discrete", "automotive"
+period_distribution: "log-uniform"
+# Minimum and maximum period for the period distribution
+period_range: [10, 1000]
+# Number of task sets
+num_sets: 100
+# Number of tasks in the task set
 tasks: 5
+# Utilization of the task set
 utilization: 0.8
+# Execution time variation in percentage of the execution time
 exec_variation: 0.1
+# Jitter in percentage of the period for variable jitter and in time units for constant jitter
 jitter: 0.1
+# Constant or variable jitter
 constant_jitter: false
+# Preemptive or non-preemptive task sets
 is_preemptive: true
+# maximum number of jobs per task set
 max_jobs: 1000
+# Run task set generation in parallel
 run_parallel: false
 # Verbose level: 0 - 4 (0: no output, 4: all output)
-verbose: 0
+verbose: 4
