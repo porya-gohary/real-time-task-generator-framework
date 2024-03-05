@@ -93,6 +93,25 @@ func createTaskSet(path string, nTasks int, seed int64, totalUtilization float64
 			}
 
 		}
+		// now we check the number of jobs in the hyperperiod
+		if maxJobs > 0 {
+			// If this took too long, we need to regenerate the task set
+			// get the hyperperiod
+			hyperperiod := tasks.HyperPeriod()
+			if hyperperiod == -1 {
+				// this means that the hyperperiod is too large
+				flag = false
+				logger.LogInfo("Regenerating task set because of large hyperperiod")
+			} else {
+				// get the number of jobs
+				numJobs := tasks.NumJobs(hyperperiod)
+				if numJobs > maxJobs {
+					// this means that the number of jobs is too large
+					flag = false
+					logger.LogInfo("Regenerating task set because of large number of jobs")
+				}
+			}
+		}
 		if flag {
 			break
 		}

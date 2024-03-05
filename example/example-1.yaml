@@ -28,4 +28,4 @@ max_jobs: 1000
 # Run task set generation in parallel
 run_parallel: true
 # Verbose level: 0 - 4 (0: no output, 4: all output)
-verbose: 0
+verbose: 4
