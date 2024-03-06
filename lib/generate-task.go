@@ -120,30 +120,9 @@ func createTaskSet(path string, numCore, nTasks int, seed int64, totalUtilizatio
 	// sort the tasks by period
 	tasks.SortByPeriod()
 
-	// remove folders before file name
-	fileName := filepath.Base(path)
-	// get the path without the file name
-	mainPath := filepath.Dir(path)
-
-	// add spec to the path before output folder
-	fileName = filepath.Join("tasksets", fileName)
-	fileName = filepath.Join(fmt.Sprintf("%.2f-util", totalUtilization), fileName)
-	if constantJitter {
-		fileName = filepath.Join(fmt.Sprintf("%d-jitter", int(jitter)), fileName)
-	} else {
-		fileName = filepath.Join(fmt.Sprintf("%d-percent-jitter", int(jitter*100)), fileName)
-	}
-	fileName = filepath.Join(fmt.Sprintf("%d-task", nTasks), fileName)
-	fileName = filepath.Join(fmt.Sprintf("%d-core", numCore), fileName)
-	fileName = filepath.Join(fmt.Sprintf("%s-perDist", periodDist), fileName)
-	fileName = filepath.Join(fmt.Sprintf("%s-utilDist", utilDist), fileName)
-
-	// add the main path to the file
-	mainPath = filepath.Join(mainPath, fileName)
-
 	// create the whole path
-	err := os.MkdirAll(filepath.Dir(mainPath), os.ModePerm)
-	file, err := os.Create(mainPath)
+	err := os.MkdirAll(filepath.Dir(path), os.ModePerm)
+	file, err := os.Create(path)
 	if err != nil {
 		return err
 	}
@@ -185,6 +164,18 @@ func createTaskSet(path string, numCore, nTasks int, seed int64, totalUtilizatio
 func CreateTaskSets(path string, numCore, numSets int, tasks int, utilization float64, utilDistribution string,
 	periodDistribution string, periodRange []int, disPeriods []int, execVariation float64, jitter float64, isPreemptive bool,
 	constantJitter bool, maxJobs int, lr *common.VerboseLogger) {
+	// add spec to the path before output folder
+	path = filepath.Join(path, fmt.Sprintf("%s-utilDist", utilDistribution))
+	path = filepath.Join(path, fmt.Sprintf("%s-perDist", periodDistribution))
+	path = filepath.Join(path, fmt.Sprintf("%d-core", numCore))
+	path = filepath.Join(path, fmt.Sprintf("%d-task", tasks))
+	if constantJitter {
+		path = filepath.Join(path, fmt.Sprintf("%d-jitter", int(jitter)))
+	} else {
+		path = filepath.Join(path, fmt.Sprintf("%d-percent-jitter", int(jitter*100)))
+	}
+	path = filepath.Join(path, fmt.Sprintf("%.2f-util", utilization))
+	path = filepath.Join(path, "tasksets")
 	// sort disPeriods
 	sort.Slice(disPeriods, func(i, j int) bool {
 		return disPeriods[i] < disPeriods[j]
@@ -217,6 +208,19 @@ func CreateTaskSets(path string, numCore, numSets int, tasks int, utilization fl
 func CreateTaskSetsParallel(path string, numCore, numSets int, tasks int, utilization float64, utilDistribution string,
 	periodDistribution string, periodRange []int, disPeriods []int, execVariation float64, jitter float64, isPreemptive bool,
 	constantJitter bool, maxJobs int, lr *common.VerboseLogger) {
+	// add spec to the path before output folder
+	path = filepath.Join(path, fmt.Sprintf("%s-utilDist", utilDistribution))
+	path = filepath.Join(path, fmt.Sprintf("%s-perDist", periodDistribution))
+	path = filepath.Join(path, fmt.Sprintf("%d-core", numCore))
+	path = filepath.Join(path, fmt.Sprintf("%d-task", tasks))
+	if constantJitter {
+		path = filepath.Join(path, fmt.Sprintf("%d-jitter", int(jitter)))
+	} else {
+		path = filepath.Join(path, fmt.Sprintf("%d-percent-jitter", int(jitter*100)))
+	}
+	path = filepath.Join(path, fmt.Sprintf("%.2f-util", utilization))
+	path = filepath.Join(path, "tasksets")
+
 	// sort disPeriods
 	sort.Slice(disPeriods, func(i, j int) bool {
 		return disPeriods[i] < disPeriods[j]
