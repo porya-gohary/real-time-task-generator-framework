@@ -13,6 +13,7 @@ import (
 // Config represents the structure of the YAML configuration file
 type Config struct {
 	Path               string  `yaml:"path"`
+	NumCores           int     `yaml:"number_of_cores"`
 	UtilDistribution   string  `yaml:"utilization_distribution"`
 	PeriodDistribution string  `yaml:"period_distribution"`
 	PeriodRange        []int   `yaml:"period_range"`
@@ -71,11 +72,11 @@ func main() {
 	//	then we need to create the task sets
 	// 	we can run the task generation in parallel if the config file specifies it
 	if config.RunParallel {
-		taskGenertor.CreateTaskSetsParallel(config.Path, config.NumSets, config.Tasks,
+		taskGenertor.CreateTaskSetsParallel(config.Path, config.NumCores, config.NumSets, config.Tasks,
 			config.Utilization, config.UtilDistribution, config.PeriodDistribution, config.PeriodRange, config.Periods,
 			config.ExecVariation, config.Jitter, config.IsPreemptive, config.ConstantJitter, config.MaxJobs, logger)
 	} else {
-		taskGenertor.CreateTaskSets(config.Path, config.NumSets, config.Tasks,
+		taskGenertor.CreateTaskSets(config.Path, config.NumCores, config.NumSets, config.Tasks,
 			config.Utilization, config.UtilDistribution, config.PeriodDistribution, config.PeriodRange, config.Periods,
 			config.ExecVariation, config.Jitter, config.IsPreemptive, config.ConstantJitter, config.MaxJobs, logger)
 	}

@@ -1,5 +1,7 @@
 # Output path for the generated task sets
 path: "output"
+# Number of cores for the task sets
+number_of_cores: 4
 # Utilization distribution to generate task sets: "uunifast", "rand-fixed-sum", "automotive"
 utilization_distribution: "uunifast"
 # Mathematical distribution to generate periods: "uniform", "log-uniform",
