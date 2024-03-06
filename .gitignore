@@ -1,4 +1,5 @@
 debug/
+output/
 *.o
 .idea
 .vscode
