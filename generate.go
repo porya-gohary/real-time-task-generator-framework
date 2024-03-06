@@ -6,7 +6,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
-	taskGenertor "task-generator/lib"
+	"task-generator/lib"
 	"task-generator/lib/common"
 )
 
@@ -26,6 +26,8 @@ type Config struct {
 	ConstantJitter     bool    `yaml:"constant_jitter"`
 	IsPreemptive       bool    `yaml:"is_preemptive"`
 	MaxJobs            int     `yaml:"max_jobs"`
+	GenerateJobs       bool    `yaml:"generate_job_sets"`
+	PriorityAssignment string  `yaml:"priority_assignment"`
 	RunParallel        bool    `yaml:"run_parallel"`
 	Verbose            int     `yaml:"verbose"`
 }
@@ -72,13 +74,32 @@ func main() {
 	//	then we need to create the task sets
 	// 	we can run the task generation in parallel if the config file specifies it
 	if config.RunParallel {
-		taskGenertor.CreateTaskSetsParallel(config.Path, config.NumCores, config.NumSets, config.Tasks,
+		lib.CreateTaskSetsParallel(config.Path, config.NumCores, config.NumSets, config.Tasks,
 			config.Utilization, config.UtilDistribution, config.PeriodDistribution, config.PeriodRange, config.Periods,
 			config.ExecVariation, config.Jitter, config.IsPreemptive, config.ConstantJitter, config.MaxJobs, logger)
 	} else {
-		taskGenertor.CreateTaskSets(config.Path, config.NumCores, config.NumSets, config.Tasks,
+		lib.CreateTaskSets(config.Path, config.NumCores, config.NumSets, config.Tasks,
 			config.Utilization, config.UtilDistribution, config.PeriodDistribution, config.PeriodRange, config.Periods,
 			config.ExecVariation, config.Jitter, config.IsPreemptive, config.ConstantJitter, config.MaxJobs, logger)
+	}
+
+	//	then we need to generate the job sets
+	if config.GenerateJobs {
+		// first change the priority assignment to an integer
+		var priorityAssignment int
+		switch config.PriorityAssignment {
+		case "RM":
+			priorityAssignment = lib.RM
+		case "DM":
+			priorityAssignment = lib.DM
+		case "EDF":
+			priorityAssignment = lib.EDF
+		}
+		if config.RunParallel {
+			lib.GenerateJobSetsParallel(config.Path, priorityAssignment)
+		} else {
+			lib.GenerateJobSets(config.Path, priorityAssignment)
+		}
 	}
 
 }

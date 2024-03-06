@@ -1,7 +1,10 @@
 package common
 
 import (
+	"encoding/csv"
+	"os"
 	"sort"
+	"strconv"
 	"time"
 )
 
@@ -77,4 +80,50 @@ func (ts TaskSet) NumJobs(hyperperiod int) int {
 		numJobs += hyperperiod / t.Period
 	}
 	return numJobs
+}
+
+// ReadTaskSet function to read a task set from a CSV file
+func ReadTaskSet(path string) (TaskSet, error) {
+	// read the task set from the CSV file
+	var tasks TaskSet
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	reader.TrimLeadingSpace = true
+
+	// skip the header
+	if _, err := reader.Read(); err != nil {
+		panic(err)
+	}
+
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, record := range records {
+		tempName := record[0]
+		tempJitter, _ := strconv.Atoi(record[1])
+		tempBCET, _ := strconv.Atoi(record[2])
+		tempWCET, _ := strconv.Atoi(record[3])
+		tempPeriod, _ := strconv.Atoi(record[4])
+		tempDeadline, _ := strconv.Atoi(record[5])
+		tempPE, _ := strconv.Atoi(record[6])
+
+		tasks = append(tasks, &Task{
+			Name:     tempName,
+			Jitter:   tempJitter,
+			BCET:     tempBCET,
+			WCET:     tempWCET,
+			Period:   tempPeriod,
+			Deadline: tempDeadline,
+			PE:       tempPE,
+		})
+	}
+
+	return tasks, nil
 }
