@@ -126,8 +126,13 @@ func createTaskSet(path string, numCore, nTasks int, seed int64, totalUtilizatio
 	mainPath := filepath.Dir(path)
 
 	// add spec to the path before output folder
+	fileName = filepath.Join("tasksets", fileName)
 	fileName = filepath.Join(fmt.Sprintf("%.2f-util", totalUtilization), fileName)
-
+	if constantJitter {
+		fileName = filepath.Join(fmt.Sprintf("%d-jitter", int(jitter)), fileName)
+	} else {
+		fileName = filepath.Join(fmt.Sprintf("%d-percent-jitter", int(jitter*100)), fileName)
+	}
 	fileName = filepath.Join(fmt.Sprintf("%d-task", nTasks), fileName)
 	fileName = filepath.Join(fmt.Sprintf("%d-core", numCore), fileName)
 	fileName = filepath.Join(fmt.Sprintf("%s-perDist", periodDist), fileName)
