@@ -23,10 +23,12 @@ func createTaskSet(path string, numCore, nTasks int, seed int64, totalUtilizatio
 	rand.Seed(seed)
 
 	tasks := common.TaskSet{}
+	var periods []int
+	var util []float64
 	for {
-		var periods []int
-		var util []float64
 		// clear tasks
+		periods = periods[:0]
+		util = util[:0]
 		tasks = tasks[:0]
 		// First, we generate the utilization
 		if utilDist == "uunifast" {
@@ -34,7 +36,7 @@ func createTaskSet(path string, numCore, nTasks int, seed int64, totalUtilizatio
 			util = uunifastDiscard(nTasks, totalUtilization, 1.0)
 		} else if utilDist == "rand-fixed-sum" {
 			// 2. RandFixedSum algorithm
-			util = StaffordRandFixedSum(nTasks, totalUtilization, 1)[0]
+			util = StaffordRandFixedSum(nTasks, totalUtilization)
 		} else if utilDist == "automotive" && periodDist == "automotive" {
 			// 3. Automotive method
 			tasks := generateAutomotiveTaskSet(totalUtilization)
@@ -91,6 +93,16 @@ func createTaskSet(path string, numCore, nTasks int, seed int64, totalUtilizatio
 				logger.LogInfo("Regenerating task set because of zero WCET")
 				break
 			}
+			if constantJitter {
+				task.Jitter = int(jitter)
+			} else {
+				task.Jitter = int(jitter * float64(task.Period))
+			}
+			if task.Period < task.WCET+task.Jitter {
+				flag = false
+				logger.LogInfo("Regenerating task set because of period less than WCET + Jitter")
+				break
+			}
 
 		}
 		// now we check the number of jobs in the hyperperiod
@@ -115,6 +127,10 @@ func createTaskSet(path string, numCore, nTasks int, seed int64, totalUtilizatio
 		if flag {
 			break
 		}
+
+		if len(util) != nTasks || len(periods) != nTasks || len(tasks) != nTasks {
+			logger.LogFatal("Error generating task set")
+		}
 	}
 
 	// sort the tasks by period
@@ -135,16 +151,6 @@ func createTaskSet(path string, numCore, nTasks int, seed int64, totalUtilizatio
 	writer.Write(headers)
 
 	for i := range tasks {
-
-		if constantJitter {
-			tasks[i].Jitter = int(jitter)
-		} else {
-			tasks[i].Jitter = int(jitter * float64(tasks[i].Period))
-		}
-
-		if tasks[i].Deadline < tasks[i].Jitter+tasks[i].WCET {
-			return fmt.Errorf("ji + ci is larger than deadline in file %s", path)
-		}
 
 		row := []string{
 			fmt.Sprintf("T%d", i),
@@ -177,8 +183,9 @@ func CreateTaskSets(path string, numCore, numSets int, tasks int, utilization fl
 	path = filepath.Join(path, fmt.Sprintf("%.2f-util", utilization))
 	path = filepath.Join(path, "tasksets")
 	// sort disPeriods
+	// from large to small
 	sort.Slice(disPeriods, func(i, j int) bool {
-		return disPeriods[i] < disPeriods[j]
+		return disPeriods[i] > disPeriods[j]
 	})
 	logger = lr
 	if lr.GetVerboseLevel() == common.VerboseLevelNone {
@@ -222,8 +229,9 @@ func CreateTaskSetsParallel(path string, numCore, numSets int, tasks int, utiliz
 	path = filepath.Join(path, "tasksets")
 
 	// sort disPeriods
+	// from large to small
 	sort.Slice(disPeriods, func(i, j int) bool {
-		return disPeriods[i] < disPeriods[j]
+		return disPeriods[i] > disPeriods[j]
 	})
 	var wg sync.WaitGroup
 	wg.Add(numSets)
