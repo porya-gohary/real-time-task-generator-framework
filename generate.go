@@ -26,6 +26,13 @@ type Config struct {
 	ConstantJitter     bool    `yaml:"constant_jitter"`
 	IsPreemptive       bool    `yaml:"is_preemptive"`
 	MaxJobs            int     `yaml:"max_jobs"`
+	GenerateDAGs       bool    `yaml:"generate_dags"`
+	DAGType            string  `yaml:"dag_type"`
+	ForkProb           float64 `yaml:"fork_probability"`
+	EdgeProb           float64 `yaml:"edge_probability"`
+	MaxBranch          int     `yaml:"max_branches"`
+	MaxVertices        int     `yaml:"max_vertices"`
+	MaxDepth           int     `yaml:"max_depth"`
 	GenerateJobs       bool    `yaml:"generate_job_sets"`
 	PriorityAssignment string  `yaml:"priority_assignment"`
 	RunParallel        bool    `yaml:"run_parallel"`
@@ -81,6 +88,15 @@ func main() {
 		lib.CreateTaskSets(config.Path, config.NumCores, config.NumSets, config.Tasks,
 			config.Utilization, config.UtilDistribution, config.PeriodDistribution, config.PeriodRange, config.Periods,
 			config.ExecVariation, config.Jitter, config.IsPreemptive, config.ConstantJitter, config.MaxJobs, logger)
+	}
+
+	// then we need to generate the DAGs
+	if config.GenerateDAGs {
+		if config.RunParallel {
+			lib.GenerateDAGSets(config.Path, config.ForkProb, config.EdgeProb, config.MaxBranch, config.MaxVertices, config.MaxDepth)
+		} else {
+			lib.GenerateDAGSetsParallel(config.Path, config.ForkProb, config.EdgeProb, config.MaxBranch, config.MaxVertices, config.MaxDepth)
+		}
 	}
 
 	//	then we need to generate the job sets

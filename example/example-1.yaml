@@ -27,6 +27,22 @@ constant_jitter: false
 is_preemptive: true
 # maximum number of jobs per task set
 max_jobs: 1000
+# ---------------------------------------------------------------------
+# Generate DAGs from the task sets
+generate_dags: false
+# DAG type to generate: "fork-join", "random"
+dag_type: "fork-join"
+# probability of forking a vertex in the DAG
+fork_probability: 0.5
+# probability of adding edge between vertices in the DAG
+edge_probability: 0.5
+# maximum number of branches per fork
+max_branches: 3
+# maximum number of vertices in the DAG
+max_vertices: 10
+# maximum depth of the DAG
+max_depth: 3
+# ---------------------------------------------------------------------
 # Generate job sets from the task sets
 generate_job_sets: false
 # Priority assignment algorithm: "RM", "DM", "EDF" (only for the job sets)
