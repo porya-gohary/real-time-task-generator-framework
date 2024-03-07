@@ -64,7 +64,14 @@ func generateJobSet(taskPath string, priorityAssignment int) {
 			})
 
 			// print the job
-			logger.LogDebug("Job: " + strconv.Itoa(jobSet[len(jobSet)-1].TaskID) + " " + strconv.Itoa(jobSet[len(jobSet)-1].JobID) + " " + strconv.Itoa(jobSet[len(jobSet)-1].EarliestArrivalTime) + " " + strconv.Itoa(jobSet[len(jobSet)-1].LatestArrivalTime) + " " + strconv.Itoa(jobSet[len(jobSet)-1].Task.BCET) + " " + strconv.Itoa(jobSet[len(jobSet)-1].Task.WCET) + " " + strconv.Itoa(jobSet[len(jobSet)-1].AbsoluteDeadline) + " " + strconv.Itoa(jobSet[len(jobSet)-1].Priority))
+			logger.LogDebug("Job: " + strconv.Itoa(jobSet[len(jobSet)-1].TaskID) + " " +
+				strconv.Itoa(jobSet[len(jobSet)-1].JobID) + " " +
+				strconv.Itoa(jobSet[len(jobSet)-1].EarliestArrivalTime) + " " +
+				strconv.Itoa(jobSet[len(jobSet)-1].LatestArrivalTime) + " " +
+				strconv.Itoa(jobSet[len(jobSet)-1].Task.BCET) + " " +
+				strconv.Itoa(jobSet[len(jobSet)-1].Task.WCET) + " " +
+				strconv.Itoa(jobSet[len(jobSet)-1].AbsoluteDeadline) + " " +
+				strconv.Itoa(jobSet[len(jobSet)-1].Priority))
 		}
 
 	}
@@ -95,7 +102,8 @@ func GenerateJobSets(taskSetPath string, priorityAssignment int) {
 	var taskSetPaths []string
 	err := filepath.Walk(taskSetPath, func(path string, info os.FileInfo, err error) error {
 		// check folder name to be "tasksets"
-		if filepath.Ext(path) == ".csv" && filepath.Base(filepath.Dir(path)) == "tasksets" {
+		if filepath.Ext(path) == ".csv" && path[len(path)-9:] != ".prec.csv" &&
+			filepath.Base(filepath.Dir(path)) == "tasksets" {
 			taskSetPaths = append(taskSetPaths, path)
 		}
 		return nil
@@ -114,8 +122,23 @@ func GenerateJobSets(taskSetPath string, priorityAssignment int) {
 
 	// now we have to generate the job sets
 	for _, taskSetPath := range taskSetPaths {
-		logger.LogInfo("Generating job set for: " + taskSetPath)
-		generateJobSet(taskSetPath, priorityAssignment)
+		// make sure that the task set is not generated before
+		// remove folders before file name
+		fileName := filepath.Base(taskSetPath)
+		// get the taskPath without the file name
+		mainPath := filepath.Dir(taskSetPath)
+		// remove taskset from the taskPath
+		mainPath = filepath.Dir(mainPath)
+		// add jobsets folder to the taskPath
+		mainPath = filepath.Join(mainPath, "jobsets")
+		// add jobset before the file name
+		mainPath = filepath.Join(mainPath, "jobset-"+fileName)
+		if _, err := os.Stat(mainPath); os.IsNotExist(err) {
+			logger.LogInfo("Generating job set for: " + taskSetPath)
+			generateJobSet(taskSetPath, priorityAssignment)
+		} else {
+			logger.LogInfo("Job set for " + taskSetPath + " exists")
+		}
 	}
 }
 
@@ -125,7 +148,8 @@ func GenerateJobSetsParallel(taskSetPath string, priorityAssignment int) {
 	var taskSetPaths []string
 	err := filepath.Walk(taskSetPath, func(path string, info os.FileInfo, err error) error {
 		// check folder name to be "tasksets"
-		if filepath.Ext(path) == ".csv" && filepath.Base(filepath.Dir(path)) == "tasksets" {
+		if filepath.Ext(path) == ".csv" && path[len(path)-9:] != ".prec.csv" &&
+			filepath.Base(filepath.Dir(path)) == "tasksets" {
 			taskSetPaths = append(taskSetPaths, path)
 		}
 		return nil
@@ -144,7 +168,22 @@ func GenerateJobSetsParallel(taskSetPath string, priorityAssignment int) {
 	for i := 0; i < len(taskSetPaths); i++ {
 		go func(setIndex int) {
 			defer wg.Done()
-			generateJobSet(taskSetPaths[setIndex], priorityAssignment)
+			// make sure that the task set is not generated before
+			// remove folders before file name
+			fileName := filepath.Base(taskSetPaths[setIndex])
+			// get the taskPath without the file name
+			mainPath := filepath.Dir(taskSetPaths[setIndex])
+			// remove taskset from the taskPath
+			mainPath = filepath.Dir(mainPath)
+			// add jobsets folder to the taskPath
+			mainPath = filepath.Join(mainPath, "jobsets")
+			// add jobset before the file name
+			mainPath = filepath.Join(mainPath, "jobset-"+fileName)
+			if _, err := os.Stat(mainPath); os.IsNotExist(err) {
+				generateJobSet(taskSetPaths[setIndex], priorityAssignment)
+			} else {
+				logger.LogInfo("Job set for " + taskSetPaths[setIndex] + " exists")
+			}
 		}(i)
 	}
 	wg.Wait()
