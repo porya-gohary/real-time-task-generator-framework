@@ -170,24 +170,26 @@ func generateDAGSet(taskPath string, pPar, pAdd float64, maxParBranches, maxVert
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
+	writer.Write([]string{"Task ID", "Vertex ID", "Relative Release", "BCET", "WCET", "Period", "Deadline", "Successors"})
+
 	for _, task := range taskSet {
 		newDAG := generateDAGFromTask(*task, pPar, pAdd, maxParBranches, maxVertices, maxDepth)
 		// first we have to write the task
-		writer.Write([]string{"T", strconv.Itoa(newDAG[0].TaskID), "0", strconv.Itoa(task.Period),
-			strconv.Itoa(task.Deadline)})
 		for _, vertex := range newDAG {
-			row := []string{
-				"V",
-				strconv.Itoa(vertex.TaskID),
-				strconv.Itoa(vertex.VertexID),
-				strconv.Itoa(vertex.RelativeRelease),
-				strconv.Itoa(vertex.BCET),
-				strconv.Itoa(vertex.WCET),
+			lineTemp := []string{strconv.Itoa(vertex.TaskID), strconv.Itoa(vertex.VertexID),
+				strconv.Itoa(vertex.RelativeRelease), strconv.Itoa(vertex.BCET), strconv.Itoa(vertex.WCET),
+				strconv.Itoa(task.Period), strconv.Itoa(task.Deadline)}
+
+			succStr := "["
+			for _, succ := range vertex.Successors {
+				succStr += strconv.Itoa(succ) + ","
 			}
-			for _, pred := range vertex.Predecessors {
-				row = append(row, strconv.Itoa(pred))
+			if len(succStr) > 1 {
+				succStr = succStr[:len(succStr)-1]
 			}
-			if err := writer.Write(row); err != nil {
+			succStr += "]"
+			lineTemp = append(lineTemp, succStr)
+			if err := writer.Write(lineTemp); err != nil {
 				logger.LogFatal("Error writing to file: " + err.Error())
 			}
 		}
@@ -256,7 +258,6 @@ func GenerateDAGSetsParallel(taskSetPath string, pPar, pAdd float64, maxParBranc
 		logger.LogFatal("Cannot find any task set in the folder: " + taskSetPath)
 	}
 
-	// now we have to generate the job sets
 	// now we have to generate the job sets in parallel
 	var wg sync.WaitGroup
 	wg.Add(len(taskSetPaths))
