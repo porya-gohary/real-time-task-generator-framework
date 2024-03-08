@@ -172,17 +172,18 @@ func generateDAGSet(taskPath string, pPar, pAdd float64, maxParBranches, maxVert
 
 	writer.Write([]string{"Task ID", "Vertex ID", "Relative Release", "BCET", "WCET", "Period", "Deadline", "Successors"})
 
+	vertexIDCounter := 0
 	for _, task := range taskSet {
 		newDAG := generateDAGFromTask(*task, pPar, pAdd, maxParBranches, maxVertices, maxDepth)
 		// first we have to write the task
 		for _, vertex := range newDAG {
-			lineTemp := []string{strconv.Itoa(vertex.TaskID), strconv.Itoa(vertex.VertexID),
+			lineTemp := []string{strconv.Itoa(vertex.TaskID), strconv.Itoa(vertex.VertexID + vertexIDCounter),
 				strconv.Itoa(vertex.RelativeRelease), strconv.Itoa(vertex.BCET), strconv.Itoa(vertex.WCET),
 				strconv.Itoa(task.Period), strconv.Itoa(task.Deadline)}
 
 			succStr := "["
 			for _, succ := range vertex.Successors {
-				succStr += strconv.Itoa(succ) + ","
+				succStr += strconv.Itoa(succ+vertexIDCounter) + ","
 			}
 			if len(succStr) > 1 {
 				succStr = succStr[:len(succStr)-1]
@@ -193,6 +194,7 @@ func generateDAGSet(taskPath string, pPar, pAdd float64, maxParBranches, maxVert
 				logger.LogFatal("Error writing to file: " + err.Error())
 			}
 		}
+		vertexIDCounter += len(newDAG)
 	}
 
 }
