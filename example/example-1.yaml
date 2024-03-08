@@ -31,6 +31,7 @@ max_jobs: 1000
 # Generate DAGs from the task sets
 generate_dags: false
 # DAG type to generate: "fork-join", "random"
+# NOTE: in "fork-join" DAGs, each task generates a fork-join graph
 dag_type: "fork-join"
 # probability of forking a vertex in the DAG
 fork_probability: 0.5
