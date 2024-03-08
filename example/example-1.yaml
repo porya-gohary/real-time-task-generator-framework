@@ -33,14 +33,16 @@ generate_dags: false
 # DAG type to generate: "fork-join", "random"
 # NOTE: in "fork-join" DAGs, each task generates a fork-join graph
 dag_type: "fork-join"
-# probability of forking a vertex in the DAG
+# probability of forking a vertex in the DAG (only for fork-join DAGs)
 fork_probability: 0.5
-# probability of adding edge between vertices in the DAG
+# probability of adding edge between vertices in the DAG (only for fork-join DAGs)
 edge_probability: 0.5
 # maximum number of branches per fork
 max_branches: 3
-# maximum number of vertices in the DAG
+# maximum number of vertices in the DAG (only for fork-join DAGs)
 max_vertices: 10
+# Number of root vertices in the DAG (only for random DAGs)
+num_roots: 1
 # maximum depth of the DAG
 max_depth: 3
 # ---------------------------------------------------------------------

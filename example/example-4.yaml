@@ -14,7 +14,7 @@ periods: [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12
 # Number of task sets
 num_sets: 2
 # Number of tasks in the task set
-tasks: 4
+tasks: 10
 # Utilization of the task set
 utilization: 1.8
 # Execution time variation in percentage of the execution time
@@ -32,7 +32,7 @@ max_jobs: 1000
 generate_dags: true
 # DAG type to generate: "fork-join", "random"
 # NOTE: in "fork-join" DAGs, each task generates a fork-join graph
-dag_type: "fork-join"
+dag_type: "random"
 # probability of forking a vertex in the DAG (only for fork-join DAGs)
 fork_probability: 0.5
 # probability of adding edge between vertices in the DAG (only for fork-join DAGs)
@@ -42,9 +42,9 @@ max_branches: 3
 # maximum number of vertices in the DAG (only for fork-join DAGs)
 max_vertices: 10
 # Number of root vertices in the DAG (only for random DAGs)
-num_roots: 1
+num_roots: 2
 # maximum depth of the DAG
-max_depth: 3
+max_depth: 6
 # ---------------------------------------------------------------------
 # Generate job sets from the task sets
 generate_job_sets: true
