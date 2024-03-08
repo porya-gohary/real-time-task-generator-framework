@@ -27,6 +27,7 @@ type Config struct {
 	IsPreemptive       bool    `yaml:"is_preemptive"`
 	MaxJobs            int     `yaml:"max_jobs"`
 	GenerateDAGs       bool    `yaml:"generate_dags"`
+	MakeDotFile        bool    `yaml:"generate_dot"`
 	DAGType            string  `yaml:"dag_type"`
 	ForkProb           float64 `yaml:"fork_probability"`
 	EdgeProb           float64 `yaml:"edge_probability"`
@@ -95,17 +96,21 @@ func main() {
 	if config.GenerateDAGs {
 		if config.RunParallel {
 			if config.DAGType == "fork-join" {
-				lib.GenerateDAGSetsParallel(config.Path, config.ForkProb, config.EdgeProb, config.MaxBranch, config.MaxVertices, config.MaxDepth)
+				lib.GenerateDAGSetsParallel(config.Path, config.ForkProb, config.EdgeProb, config.MaxBranch,
+					config.MaxVertices, config.MaxDepth, config.MakeDotFile)
 			} else if config.DAGType == "random" {
-				lib.GenerateRandomDAGsParallel(config.Path, config.NumRoots, config.MaxBranch, config.MaxDepth)
+				lib.GenerateRandomDAGsParallel(config.Path, config.NumRoots, config.MaxBranch, config.MaxDepth,
+					config.MakeDotFile)
 			} else {
 				logger.LogFatal("Invalid DAG type")
 			}
 		} else {
 			if config.DAGType == "fork-join" {
-				lib.GenerateDAGSets(config.Path, config.ForkProb, config.EdgeProb, config.MaxBranch, config.MaxVertices, config.MaxDepth)
+				lib.GenerateDAGSets(config.Path, config.ForkProb, config.EdgeProb, config.MaxBranch, config.MaxVertices,
+					config.MaxDepth, config.MakeDotFile)
 			} else if config.DAGType == "random" {
-				lib.GenerateRandomDAGs(config.Path, config.NumRoots, config.MaxBranch, config.MaxDepth)
+				lib.GenerateRandomDAGs(config.Path, config.NumRoots, config.MaxBranch, config.MaxDepth,
+					config.MakeDotFile)
 			} else {
 				logger.LogFatal("Invalid DAG type")
 			}

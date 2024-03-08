@@ -30,6 +30,8 @@ max_jobs: 1000
 # ---------------------------------------------------------------------
 # Generate DAGs from the task sets
 generate_dags: true
+# Generate Dot file for the DAGs
+generate_dot: true
 # DAG type to generate: "fork-join", "random"
 # NOTE: in "fork-join" DAGs, each task generates a fork-join graph
 dag_type: "fork-join"

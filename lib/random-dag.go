@@ -90,7 +90,7 @@ func generateDAG(taskSet common.TaskSet, rootNodeNum, maxBranch, maxDepth int) c
 	return vertices
 }
 
-func generateRandomDAG(taskPath string, rootNodeNum, maxBranch, maxDepth int) {
+func generateRandomDAG(taskPath string, rootNodeNum, maxBranch, maxDepth int, makeDotFile bool) {
 	// first we have to read the task set
 	taskSet, err := common.ReadTaskSet(taskPath)
 	if err != nil {
@@ -132,10 +132,27 @@ func generateRandomDAG(taskPath string, rootNodeNum, maxBranch, maxDepth int) {
 		writer.Write(lineTemp)
 	}
 
+	// write the dot file
+	if makeDotFile {
+		dotPath := taskPath[:len(taskPath)-4] + ".dot"
+		os.MkdirAll(filepath.Dir(dotPath), os.ModePerm)
+		// write the dot file
+		writerDot, err := os.Create(dotPath)
+		if err != nil {
+			logger.LogFatal("Error creating file: " + err.Error())
+		}
+		defer writerDot.Close()
+		_, err = writerDot.WriteString("digraph G {\n" + vertices.GenerateDotFile("DAG", 0) + "\n}")
+		if err != nil {
+			logger.LogFatal("Error writing to file: " + err.Error())
+		}
+
+	}
+
 }
 
 // GenerateRandomDAGs function to generate random DAGs
-func GenerateRandomDAGs(taskSetPath string, rootNodeNum, maxBranch, maxDepth int) {
+func GenerateRandomDAGs(taskSetPath string, rootNodeNum, maxBranch, maxDepth int, makeDotFile bool) {
 	// first we have to find all the task sets with csv extension in
 	var taskSetPaths []string
 	err := filepath.Walk(taskSetPath, func(path string, info os.FileInfo, err error) error {
@@ -164,7 +181,7 @@ func GenerateRandomDAGs(taskSetPath string, rootNodeNum, maxBranch, maxDepth int
 		predPath := taskSetPath[:len(taskSetPath)-4] + ".prec" + ".csv"
 		if _, err := os.Stat(predPath); os.IsNotExist(err) {
 			logger.LogInfo("Generating DAG for: " + taskSetPath)
-			generateRandomDAG(taskSetPath, rootNodeNum, maxBranch, maxDepth)
+			generateRandomDAG(taskSetPath, rootNodeNum, maxBranch, maxDepth, makeDotFile)
 		} else {
 			logger.LogInfo(fmt.Sprintf("%s exists", predPath))
 		}
@@ -172,7 +189,7 @@ func GenerateRandomDAGs(taskSetPath string, rootNodeNum, maxBranch, maxDepth int
 }
 
 // GenerateRandomDAGsParallel function to generate random DAGs in parallel
-func GenerateRandomDAGsParallel(taskSetPath string, rootNodeNum, maxBranch, maxDepth int) {
+func GenerateRandomDAGsParallel(taskSetPath string, rootNodeNum, maxBranch, maxDepth int, makeDotFile bool) {
 	// first we have to find all the task sets with csv extension in
 	var taskSetPaths []string
 	err := filepath.Walk(taskSetPath, func(path string, info os.FileInfo, err error) error {
@@ -205,7 +222,7 @@ func GenerateRandomDAGsParallel(taskSetPath string, rootNodeNum, maxBranch, maxD
 			predPath := taskSetPath[:len(taskSetPath)-4] + ".prec" + ".csv"
 			if _, err := os.Stat(predPath); os.IsNotExist(err) {
 				logger.LogInfo("Generating DAG for: " + taskSetPath)
-				go generateRandomDAG(taskSetPath, rootNodeNum, maxBranch, maxDepth)
+				go generateRandomDAG(taskSetPath, rootNodeNum, maxBranch, maxDepth, makeDotFile)
 			} else {
 				logger.LogInfo(fmt.Sprintf("%s exists", predPath))
 			}

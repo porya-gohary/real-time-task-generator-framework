@@ -151,7 +151,7 @@ func generateDAGFromTask(task common.Task, pPar, pAdd float64, maxParBranches, m
 	return vertices
 }
 
-func generateDAGSet(taskPath string, pPar, pAdd float64, maxParBranches, maxVertices, maxDepth int) {
+func generateDAGSet(taskPath string, pPar, pAdd float64, maxParBranches, maxVertices, maxDepth int, makeDotFile bool) {
 	// first we have to read the task set
 	taskSet, err := common.ReadTaskSet(taskPath)
 	if err != nil {
@@ -172,10 +172,14 @@ func generateDAGSet(taskPath string, pPar, pAdd float64, maxParBranches, maxVert
 
 	writer.Write([]string{"Task ID", "Vertex ID", "Relative Release", "BCET", "WCET", "Period", "Deadline", "Successors"})
 
+	dotFile := ""
 	vertexIDCounter := 0
 	for _, task := range taskSet {
 		newDAG := generateDAGFromTask(*task, pPar, pAdd, maxParBranches, maxVertices, maxDepth)
 		// first we have to write the task
+		if makeDotFile {
+			dotFile += newDAG.GenerateDotFile(task.Name, vertexIDCounter)
+		}
 		for _, vertex := range newDAG {
 			lineTemp := []string{strconv.Itoa(vertex.TaskID), strconv.Itoa(vertex.VertexID + vertexIDCounter),
 				strconv.Itoa(vertex.RelativeRelease), strconv.Itoa(vertex.BCET), strconv.Itoa(vertex.WCET),
@@ -197,10 +201,29 @@ func generateDAGSet(taskPath string, pPar, pAdd float64, maxParBranches, maxVert
 		vertexIDCounter += len(newDAG)
 	}
 
+	// write the dot file
+	if makeDotFile {
+		dotPath := taskPath[:len(taskPath)-4] + ".dot"
+		os.MkdirAll(filepath.Dir(dotPath), os.ModePerm)
+		// write the dot file
+		writerDot, err := os.Create(dotPath)
+		if err != nil {
+			logger.LogFatal("Error creating file: " + err.Error())
+		}
+
+		dotFile = "digraph G {\n" + dotFile + "}\n"
+
+		if _, err := writerDot.WriteString(dotFile); err != nil {
+			logger.LogFatal("Error writing to file: " + err.Error())
+		}
+		// close the file
+		writerDot.Close()
+	}
+
 }
 
 // GenerateDAGSets generates DAG sets for each task set in the task set folder
-func GenerateDAGSets(taskSetPath string, pPar, pAdd float64, maxParBranches, maxVertices, maxDepth int) {
+func GenerateDAGSets(taskSetPath string, pPar, pAdd float64, maxParBranches, maxVertices, maxDepth int, makeDotFile bool) {
 	// first we have to find all the task sets with csv extension in
 	var taskSetPaths []string
 	err := filepath.Walk(taskSetPath, func(path string, info os.FileInfo, err error) error {
@@ -229,7 +252,7 @@ func GenerateDAGSets(taskSetPath string, pPar, pAdd float64, maxParBranches, max
 		predPath := taskSetPath[:len(taskSetPath)-4] + ".prec" + ".csv"
 		if _, err := os.Stat(predPath); os.IsNotExist(err) {
 			logger.LogInfo("Generating DAG for: " + taskSetPath)
-			generateDAGSet(taskSetPath, pPar, pAdd, maxParBranches, maxVertices, maxDepth)
+			generateDAGSet(taskSetPath, pPar, pAdd, maxParBranches, maxVertices, maxDepth, makeDotFile)
 		} else {
 			logger.LogInfo(fmt.Sprintf("%s exists", predPath))
 		}
@@ -237,7 +260,7 @@ func GenerateDAGSets(taskSetPath string, pPar, pAdd float64, maxParBranches, max
 }
 
 // GenerateDAGSetsParallel generates DAG sets for each task set in the task set folder in parallel
-func GenerateDAGSetsParallel(taskSetPath string, pPar, pAdd float64, maxParBranches, maxVertices, maxDepth int) {
+func GenerateDAGSetsParallel(taskSetPath string, pPar, pAdd float64, maxParBranches, maxVertices, maxDepth int, makeDotFile bool) {
 	// first we have to find all the task sets with csv extension in
 	var taskSetPaths []string
 	err := filepath.Walk(taskSetPath, func(path string, info os.FileInfo, err error) error {
@@ -270,7 +293,7 @@ func GenerateDAGSetsParallel(taskSetPath string, pPar, pAdd float64, maxParBranc
 			predPath := taskSetPath[:len(taskSetPath)-4] + ".prec" + ".csv"
 			if _, err := os.Stat(predPath); os.IsNotExist(err) {
 				logger.LogInfo("Generating DAG for: " + taskSetPath)
-				go generateDAGSet(taskSetPath, pPar, pAdd, maxParBranches, maxVertices, maxDepth)
+				go generateDAGSet(taskSetPath, pPar, pAdd, maxParBranches, maxVertices, maxDepth, makeDotFile)
 			} else {
 				logger.LogInfo(fmt.Sprintf("%s exists", predPath))
 			}
