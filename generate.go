@@ -32,6 +32,7 @@ type Config struct {
 	EdgeProb           float64 `yaml:"edge_probability"`
 	MaxBranch          int     `yaml:"max_branches"`
 	MaxVertices        int     `yaml:"max_vertices"`
+	NumRoots           int     `yaml:"num_roots"`
 	MaxDepth           int     `yaml:"max_depth"`
 	GenerateJobs       bool    `yaml:"generate_job_sets"`
 	PriorityAssignment string  `yaml:"priority_assignment"`
@@ -93,9 +94,21 @@ func main() {
 	// then we need to generate the DAGs
 	if config.GenerateDAGs {
 		if config.RunParallel {
-			lib.GenerateDAGSets(config.Path, config.ForkProb, config.EdgeProb, config.MaxBranch, config.MaxVertices, config.MaxDepth)
+			if config.DAGType == "fork-join" {
+				lib.GenerateDAGSetsParallel(config.Path, config.ForkProb, config.EdgeProb, config.MaxBranch, config.MaxVertices, config.MaxDepth)
+			} else if config.DAGType == "random" {
+				lib.GenerateRandomDAGsParallel(config.Path, config.NumRoots, config.MaxBranch, config.MaxDepth)
+			} else {
+				logger.LogFatal("Invalid DAG type")
+			}
 		} else {
-			lib.GenerateDAGSetsParallel(config.Path, config.ForkProb, config.EdgeProb, config.MaxBranch, config.MaxVertices, config.MaxDepth)
+			if config.DAGType == "fork-join" {
+				lib.GenerateDAGSets(config.Path, config.ForkProb, config.EdgeProb, config.MaxBranch, config.MaxVertices, config.MaxDepth)
+			} else if config.DAGType == "random" {
+				lib.GenerateRandomDAGs(config.Path, config.NumRoots, config.MaxBranch, config.MaxDepth)
+			} else {
+				logger.LogFatal("Invalid DAG type")
+			}
 		}
 	}
 
