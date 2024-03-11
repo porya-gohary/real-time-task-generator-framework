@@ -112,7 +112,7 @@ func generateRandomDAG(taskPath string, rootNodeNum, maxBranch, maxDepth int, ma
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
-	writer.Write([]string{"Task ID", "Vertex ID", "Relative Release", "BCET", "WCET", "Period", "Deadline", "Successors"})
+	writer.Write([]string{"Task ID", "Vertex ID", "Jitter", "BCET", "WCET", "Period", "Deadline", "Successors"})
 
 	for i, task := range taskSet {
 		// first we have to write the task

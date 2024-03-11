@@ -172,7 +172,7 @@ func generateDAGSet(taskPath string, pPar, pAdd float64, maxParBranches, maxVert
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
-	writer.Write([]string{"Task ID", "Vertex ID", "Relative Release", "BCET", "WCET", "Period", "Deadline", "Successors"})
+	writer.Write([]string{"Task ID", "Vertex ID", "Jitter", "BCET", "WCET", "Period", "Deadline", "Successors"})
 
 	dotFile := ""
 	vertexIDCounter := 0
