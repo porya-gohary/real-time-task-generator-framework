@@ -22,8 +22,10 @@ func expandDAG(vertices common.VertexSet, source, sink, depth, numBranches, maxP
 
 	if source == 0 && sink == 0 {
 		// add the source and sink vertices
-		vertices = append(vertices, &common.Vertex{VertexID: 0, Depth: depth})
-		vertices = append(vertices, &common.Vertex{VertexID: 1, Depth: -depth})
+		so := &common.Vertex{VertexID: 0, Depth: depth}
+		si := &common.Vertex{VertexID: 1, Depth: -depth}
+
+		vertices = append(vertices, so, si)
 
 		vertices = expandDAG(vertices, 0, 1, depth-1, parBranches, maxParBranches, maxVertices, pPar)
 	} else {
