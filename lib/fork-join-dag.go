@@ -146,7 +146,7 @@ func generateDAGFromTask(task common.Task, pPar, pAdd float64, maxParBranches, m
 
 	for i := range vertices {
 		vertices[i].TaskID, _ = strconv.Atoi(task.Name[1:])
-		vertices[i].RelativeRelease = task.Jitter
+		vertices[i].Jitter = task.Jitter
 		vertices[i].BCET = bcetList[i]
 		vertices[i].WCET = wcetList[i]
 	}
@@ -184,7 +184,7 @@ func generateDAGSet(taskPath string, pPar, pAdd float64, maxParBranches, maxVert
 		}
 		for _, vertex := range newDAG {
 			lineTemp := []string{strconv.Itoa(vertex.TaskID), strconv.Itoa(vertex.VertexID + vertexIDCounter),
-				strconv.Itoa(vertex.RelativeRelease), strconv.Itoa(vertex.BCET), strconv.Itoa(vertex.WCET),
+				strconv.Itoa(vertex.Jitter), strconv.Itoa(vertex.BCET), strconv.Itoa(vertex.WCET),
 				strconv.Itoa(task.Period), strconv.Itoa(task.Deadline)}
 
 			succStr := "["

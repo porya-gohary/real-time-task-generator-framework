@@ -26,11 +26,11 @@ func generateDAG(taskSet common.TaskSet, rootNodeNum, maxBranch, maxDepth int) c
 		taskID, _ := strconv.Atoi(task.Name[1:])
 
 		vertices = append(vertices, &common.Vertex{
-			TaskID:          taskID,
-			VertexID:        taskID,
-			RelativeRelease: task.Jitter,
-			BCET:            task.BCET,
-			WCET:            task.WCET,
+			TaskID:   taskID,
+			VertexID: taskID,
+			Jitter:   task.Jitter,
+			BCET:     task.BCET,
+			WCET:     task.WCET,
 		})
 	}
 
@@ -117,7 +117,7 @@ func generateRandomDAG(taskPath string, rootNodeNum, maxBranch, maxDepth int, ma
 	for i, task := range taskSet {
 		// first we have to write the task
 		lineTemp := []string{strconv.Itoa(vertices[i].TaskID), strconv.Itoa(vertices[i].VertexID),
-			strconv.Itoa(vertices[i].RelativeRelease), strconv.Itoa(vertices[i].BCET), strconv.Itoa(vertices[i].WCET),
+			strconv.Itoa(vertices[i].Jitter), strconv.Itoa(vertices[i].BCET), strconv.Itoa(vertices[i].WCET),
 			strconv.Itoa(task.Period), strconv.Itoa(task.Deadline)}
 
 		predStr := "["
