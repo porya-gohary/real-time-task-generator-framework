@@ -1,5 +1,7 @@
 # Output path for the generated task sets
 path: "output"
+# output file format: "yaml", "csv"
+output_format: "csv"
 # Number of cores for the task sets
 number_of_cores: 4
 # Utilization distribution to generate task sets: "uunifast", "rand-fixed-sum", "automotive"

@@ -1,14 +1,12 @@
 package lib
 
 import (
-	"encoding/csv"
 	"fmt"
 	"github.com/schollz/progressbar/v3"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"sync"
 	"task-generator/lib/common"
 	"time"
@@ -139,30 +137,19 @@ func createTaskSet(path string, numCore, nTasks int, seed int64, totalUtilizatio
 
 	// create the whole path
 	err := os.MkdirAll(filepath.Dir(path), os.ModePerm)
-	file, err := os.Create(path)
+
 	if err != nil {
 		return err
 	}
-	defer file.Close()
-
-	writer := csv.NewWriter(file)
-	defer writer.Flush()
-
-	headers := []string{"Name", "Jitter", "BCET", "WCET", "Period", "Deadline", "PE"}
-	writer.Write(headers)
-
-	for i := range tasks {
-
-		row := []string{
-			fmt.Sprintf("T%d", i),
-			fmt.Sprintf("%d", tasks[i].Jitter),
-			strconv.Itoa(tasks[i].BCET),
-			strconv.Itoa(tasks[i].WCET),
-			strconv.Itoa(tasks[i].Period),
-			strconv.Itoa(tasks[i].Deadline),
-			strconv.Itoa(tasks[i].PE),
+	// write the task set to a CSV file
+	if outputFormat == "csv" {
+		err = tasks.WriteTaskSet(path)
+		if err != nil {
+			return err
 		}
-		writer.Write(row)
+	} else if outputFormat == "yaml" {
+		err = tasks.WriteTaskSetYAML(path)
+
 	}
 	return nil
 }
@@ -193,7 +180,7 @@ func CreateTaskSets(path string, numCore, numSets int, tasks int, utilization fl
 		bar = progressbar.Default(int64(numSets))
 	}
 	for i := 0; i < numSets; i++ {
-		file := fmt.Sprintf("%s_%d.csv", periodDistribution, i)
+		file := fmt.Sprintf("%s_%d.%s", periodDistribution, i, outputFormat)
 		taskSetPath := filepath.Join(path, file)
 		if _, err := os.Stat(taskSetPath); os.IsNotExist(err) {
 			if err := createTaskSet(taskSetPath, numCore, tasks, time.Now().UnixNano(), utilization, utilDistribution,
@@ -241,7 +228,7 @@ func CreateTaskSetsParallel(path string, numCore, numSets int, tasks int, utiliz
 	for i := 0; i < numSets; i++ {
 		go func(setIndex int) {
 			defer wg.Done()
-			file := fmt.Sprintf("%s_%d.csv", periodDistribution, setIndex)
+			file := fmt.Sprintf("%s_%d.%s", periodDistribution, setIndex, outputFormat)
 			taskSetPath := filepath.Join(path, file)
 			if _, err := os.Stat(taskSetPath); os.IsNotExist(err) {
 				if err := createTaskSet(taskSetPath, numCore, tasks, time.Now().UnixNano(), utilization, utilDistribution,

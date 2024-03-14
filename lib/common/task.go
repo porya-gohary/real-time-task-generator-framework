@@ -2,6 +2,7 @@ package common
 
 import (
 	"encoding/csv"
+	"fmt"
 	"os"
 	"sort"
 	"strconv"
@@ -80,6 +81,63 @@ func (ts TaskSet) NumJobs(hyperperiod int) int {
 		numJobs += hyperperiod / t.Period
 	}
 	return numJobs
+}
+
+// WriteTaskSet function to write a task set to a CSV file
+func (ts TaskSet) WriteTaskSet(path string) error {
+	file, err := os.Create(path)
+	defer file.Close()
+	if err != nil {
+		return err
+	}
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	headers := []string{"Name", "Jitter", "BCET", "WCET", "Period", "Deadline", "PE"}
+	writer.Write(headers)
+
+	for i := range ts {
+
+		row := []string{
+			fmt.Sprintf("T%d", i),
+			fmt.Sprintf("%d", ts[i].Jitter),
+			strconv.Itoa(ts[i].BCET),
+			strconv.Itoa(ts[i].WCET),
+			strconv.Itoa(ts[i].Period),
+			strconv.Itoa(ts[i].Deadline),
+			strconv.Itoa(ts[i].PE),
+		}
+		writer.Write(row)
+	}
+
+	return nil
+}
+
+// WriteTaskSetYAML function to write a task set to a YAML file
+func (ts TaskSet) WriteTaskSetYAML(path string) error {
+	// write the task set to a YAML file
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// write the task set to a YAML file
+	// first, we need to add taskset as the root element
+	_, err = file.WriteString("taskset:\n")
+	// then, we add the tasks
+	for i, t := range ts {
+		_, err = file.WriteString(fmt.Sprintf("  - Name: T%d\n", i))
+		_, err = file.WriteString(fmt.Sprintf("    Jitter: %d\n", t.Jitter))
+		_, err = file.WriteString(fmt.Sprintf("    BCET: %d\n", t.BCET))
+		_, err = file.WriteString(fmt.Sprintf("    WCET: %d\n", t.WCET))
+		_, err = file.WriteString(fmt.Sprintf("    period: %d\n", t.Period))
+		_, err = file.WriteString(fmt.Sprintf("    deadline: %d\n", t.Deadline))
+		_, err = file.WriteString(fmt.Sprintf("    PE: %d\n", t.PE))
+
+	}
+	return nil
 }
 
 // ReadTaskSet function to read a task set from a CSV file

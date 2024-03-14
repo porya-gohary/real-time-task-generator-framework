@@ -1,5 +1,7 @@
 # Output path for the generated task sets
 path: "output"
+# output file format: "yaml", "csv"
+output_format: "csv"
 # Number of cores for the task sets
 number_of_cores: 4
 # Utilization distribution to generate task sets: "uunifast", "rand-fixed-sum", "automotive"
@@ -47,7 +49,7 @@ num_roots: 1
 max_depth: 3
 # ---------------------------------------------------------------------
 # Generate job sets from the task sets
-generate_job_sets: true
+generate_job_sets: false
 # Priority assignment algorithm: "RM", "DM", "EDF" (only for the job sets)
 priority_assignment: "RM"
 # Run task set generation in parallel
