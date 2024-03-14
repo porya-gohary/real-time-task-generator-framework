@@ -24,7 +24,6 @@ type Config struct {
 	ExecVariation      float64 `yaml:"exec_variation"`
 	Jitter             float64 `yaml:"jitter"`
 	ConstantJitter     bool    `yaml:"constant_jitter"`
-	IsPreemptive       bool    `yaml:"is_preemptive"`
 	MaxJobs            int     `yaml:"max_jobs"`
 	GenerateDAGs       bool    `yaml:"generate_dags"`
 	MakeDotFile        bool    `yaml:"generate_dot"`

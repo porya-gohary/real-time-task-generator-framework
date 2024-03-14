@@ -23,8 +23,6 @@ exec_variation: 0.1
 jitter: 0.1
 # Constant or variable jitter
 constant_jitter: false
-# Preemptive or non-preemptive task sets
-is_preemptive: true
 # maximum number of jobs per task set
 max_jobs: 1000
 # ---------------------------------------------------------------------
