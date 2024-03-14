@@ -19,7 +19,8 @@ var bar *progressbar.ProgressBar
 
 // create a task set
 func createTaskSet(path string, numCore, nTasks int, seed int64, totalUtilization float64, utilDist string, periodDist string,
-	periodRange []int, disPeriods []int, alpha float64, jitter float64, isPreemptive bool, constantJitter bool, maxJobs int) error {
+	periodRange []int, disPeriods []int, alpha float64, jitter float64, constantJitter bool,
+	maxJobs int, outputFormat string) error {
 	rand.Seed(seed)
 
 	tasks := common.TaskSet{}
@@ -168,8 +169,8 @@ func createTaskSet(path string, numCore, nTasks int, seed int64, totalUtilizatio
 
 // CreateTaskSets creates a number of task sets and writes them to the specified path
 func CreateTaskSets(path string, numCore, numSets int, tasks int, utilization float64, utilDistribution string,
-	periodDistribution string, periodRange []int, disPeriods []int, execVariation float64, jitter float64, isPreemptive bool,
-	constantJitter bool, maxJobs int, lr *common.VerboseLogger) {
+	periodDistribution string, periodRange []int, disPeriods []int, execVariation float64, jitter float64,
+	constantJitter bool, maxJobs int, outputFormat string, lr *common.VerboseLogger) {
 	// add spec to the path before output folder
 	path = filepath.Join(path, fmt.Sprintf("%s-utilDist", utilDistribution))
 	path = filepath.Join(path, fmt.Sprintf("%s-perDist", periodDistribution))
@@ -196,8 +197,8 @@ func CreateTaskSets(path string, numCore, numSets int, tasks int, utilization fl
 		taskSetPath := filepath.Join(path, file)
 		if _, err := os.Stat(taskSetPath); os.IsNotExist(err) {
 			if err := createTaskSet(taskSetPath, numCore, tasks, time.Now().UnixNano(), utilization, utilDistribution,
-				periodDistribution, periodRange, disPeriods, execVariation, jitter,
-				isPreemptive, constantJitter, maxJobs); err != nil {
+				periodDistribution, periodRange, disPeriods, execVariation, jitter, constantJitter,
+				maxJobs, outputFormat); err != nil {
 				fmt.Println(err)
 			} else {
 				logger.LogInfo(fmt.Sprintf("%s created", taskSetPath))
@@ -213,8 +214,8 @@ func CreateTaskSets(path string, numCore, numSets int, tasks int, utilization fl
 
 // CreateTaskSetsParallel creates task sets in parallel using the given parameters
 func CreateTaskSetsParallel(path string, numCore, numSets int, tasks int, utilization float64, utilDistribution string,
-	periodDistribution string, periodRange []int, disPeriods []int, execVariation float64, jitter float64, isPreemptive bool,
-	constantJitter bool, maxJobs int, lr *common.VerboseLogger) {
+	periodDistribution string, periodRange []int, disPeriods []int, execVariation float64, jitter float64,
+	constantJitter bool, maxJobs int, outputFormat string, lr *common.VerboseLogger) {
 	// add spec to the path before output folder
 	path = filepath.Join(path, fmt.Sprintf("%s-utilDist", utilDistribution))
 	path = filepath.Join(path, fmt.Sprintf("%s-perDist", periodDistribution))
@@ -244,8 +245,8 @@ func CreateTaskSetsParallel(path string, numCore, numSets int, tasks int, utiliz
 			taskSetPath := filepath.Join(path, file)
 			if _, err := os.Stat(taskSetPath); os.IsNotExist(err) {
 				if err := createTaskSet(taskSetPath, numCore, tasks, time.Now().UnixNano(), utilization, utilDistribution,
-					periodDistribution, periodRange, disPeriods, execVariation, jitter, isPreemptive,
-					constantJitter, maxJobs); err != nil {
+					periodDistribution, periodRange, disPeriods, execVariation, jitter,
+					constantJitter, maxJobs, outputFormat); err != nil {
 					fmt.Println(err)
 				} else {
 					logger.LogInfo(fmt.Sprintf("%s created", taskSetPath))

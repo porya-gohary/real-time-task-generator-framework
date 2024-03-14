@@ -13,6 +13,7 @@ import (
 // Config represents the structure of the YAML configuration file
 type Config struct {
 	Path               string  `yaml:"path"`
+	OutputFormat       string  `yaml:"output_format"`
 	NumCores           int     `yaml:"number_of_cores"`
 	UtilDistribution   string  `yaml:"utilization_distribution"`
 	PeriodDistribution string  `yaml:"period_distribution"`
@@ -84,11 +85,13 @@ func main() {
 	if config.RunParallel {
 		lib.CreateTaskSetsParallel(config.Path, config.NumCores, config.NumSets, config.Tasks,
 			config.Utilization, config.UtilDistribution, config.PeriodDistribution, config.PeriodRange, config.Periods,
-			config.ExecVariation, config.Jitter, config.IsPreemptive, config.ConstantJitter, config.MaxJobs, logger)
+			config.ExecVariation, config.Jitter, config.ConstantJitter, config.MaxJobs,
+			config.OutputFormat, logger)
 	} else {
 		lib.CreateTaskSets(config.Path, config.NumCores, config.NumSets, config.Tasks,
 			config.Utilization, config.UtilDistribution, config.PeriodDistribution, config.PeriodRange, config.Periods,
-			config.ExecVariation, config.Jitter, config.IsPreemptive, config.ConstantJitter, config.MaxJobs, logger)
+			config.ExecVariation, config.Jitter, config.ConstantJitter, config.MaxJobs,
+			config.OutputFormat, logger)
 	}
 
 	// then we need to generate the DAGs
