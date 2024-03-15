@@ -3,6 +3,7 @@ package common
 import (
 	"encoding/csv"
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"os"
 	"sort"
 	"strconv"
@@ -171,6 +172,47 @@ func ReadTaskSet(path string) (TaskSet, error) {
 		tempPeriod, _ := strconv.Atoi(record[4])
 		tempDeadline, _ := strconv.Atoi(record[5])
 		tempPE, _ := strconv.Atoi(record[6])
+
+		tasks = append(tasks, &Task{
+			Name:     tempName,
+			Jitter:   tempJitter,
+			BCET:     tempBCET,
+			WCET:     tempWCET,
+			Period:   tempPeriod,
+			Deadline: tempDeadline,
+			PE:       tempPE,
+		})
+	}
+
+	return tasks, nil
+}
+
+// ReadTaskSetYAML function to read a task set from a YAML file
+func ReadTaskSetYAML(path string) (TaskSet, error) {
+	// read the task set from the YAML file
+	var tasks TaskSet
+	file, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	// read the task set from the YAML file
+	// first, unmarshal the YAML file
+	var taskSet map[string][]map[string]interface{}
+	err = yaml.Unmarshal(file, &taskSet)
+	if err != nil {
+		return nil, err
+	}
+
+	// then, we need to iterate over the task set
+	for _, t := range taskSet["taskset"] {
+		tempName := t["Name"].(string)
+		tempJitter := int(t["Jitter"].(int))
+		tempBCET := int(t["BCET"].(int))
+		tempWCET := int(t["WCET"].(int))
+		tempPeriod := int(t["period"].(int))
+		tempDeadline := int(t["deadline"].(int))
+		tempPE := int(t["PE"].(int))
 
 		tasks = append(tasks, &Task{
 			Name:     tempName,

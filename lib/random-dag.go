@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"task-generator/lib/common"
 	"time"
@@ -90,51 +91,96 @@ func generateDAG(taskSet common.TaskSet, rootNodeNum, maxBranch, maxDepth int) c
 	return vertices
 }
 
-func generateRandomDAG(taskPath string, rootNodeNum, maxBranch, maxDepth int, makeDotFile bool) {
+func generateRandomDAG(taskPath string, rootNodeNum, maxBranch, maxDepth int, makeDotFile bool, outputFormat string) {
 	// first we have to read the task set
-	taskSet, err := common.ReadTaskSet(taskPath)
-	if err != nil {
-		logger.LogFatal("Error reading task set: " + err.Error())
+	var taskSet common.TaskSet
+	var err error
+
+	// first we have to read the task set
+	if outputFormat == "csv" {
+		taskSet, err = common.ReadTaskSet(taskPath)
+		if err != nil {
+			logger.LogFatal("Error reading task set: " + err.Error())
+		}
+	} else {
+		taskSet, err = common.ReadTaskSetYAML(taskPath)
+		if err != nil {
+			logger.LogFatal("Error reading task set: " + err.Error())
+		}
+
 	}
 
 	// generate the DAG
 	vertices := generateDAG(taskSet, rootNodeNum, maxBranch, maxDepth)
 
 	// add ".prec" at the end of file before ".csv" and write the set of vertices to a file
-	mainPath := taskPath[:len(taskPath)-4] + ".prec" + ".csv"
+	mainPath := taskPath[:strings.LastIndex(taskPath, ".")] + ".prec." + outputFormat
 	// create the whole path
 	err = os.MkdirAll(filepath.Dir(mainPath), os.ModePerm)
 	file, err := os.Create(mainPath)
 	if err != nil {
 		logger.LogFatal("Error creating file: " + err.Error())
 	}
-	// write the job set to a file
-	writer := csv.NewWriter(file)
-	defer writer.Flush()
+	if outputFormat == "csv" {
+		// write the job set to a file
+		writer := csv.NewWriter(file)
+		defer writer.Flush()
 
-	writer.Write([]string{"Task ID", "Vertex ID", "Jitter", "BCET", "WCET", "Period", "Deadline", "Successors"})
+		writer.Write([]string{"Task ID", "Vertex ID", "Jitter", "BCET", "WCET", "Period", "Deadline", "Successors"})
 
-	for i, task := range taskSet {
-		// first we have to write the task
-		lineTemp := []string{strconv.Itoa(vertices[i].TaskID), strconv.Itoa(vertices[i].VertexID),
-			strconv.Itoa(vertices[i].Jitter), strconv.Itoa(vertices[i].BCET), strconv.Itoa(vertices[i].WCET),
-			strconv.Itoa(task.Period), strconv.Itoa(task.Deadline)}
+		for i, task := range taskSet {
+			// first we have to write the task
+			lineTemp := []string{strconv.Itoa(vertices[i].TaskID), strconv.Itoa(vertices[i].VertexID),
+				strconv.Itoa(vertices[i].Jitter), strconv.Itoa(vertices[i].BCET), strconv.Itoa(vertices[i].WCET),
+				strconv.Itoa(task.Period), strconv.Itoa(task.Deadline)}
 
-		predStr := "["
-		for _, pred := range vertices[i].Successors {
-			predStr += strconv.Itoa(pred) + ","
+			succStr := "["
+			for _, succ := range vertices[i].Successors {
+				succStr += strconv.Itoa(succ) + ","
+			}
+			if len(succStr) > 1 {
+				succStr = succStr[:len(succStr)-1]
+			}
+			succStr += "]"
+			lineTemp = append(lineTemp, succStr)
+			writer.Write(lineTemp)
 		}
-		if len(predStr) > 1 {
-			predStr = predStr[:len(predStr)-1]
+	} else {
+		// we need to add vertexset as the root element
+		_, err = file.WriteString("- vertexset:\n")
+		if err != nil {
+			logger.LogFatal("Error writing to file: " + err.Error())
 		}
-		predStr += "]"
-		lineTemp = append(lineTemp, predStr)
-		writer.Write(lineTemp)
+
+		// then, we add the vertices
+		for i, task := range taskSet {
+			_, err = file.WriteString(fmt.Sprintf("  - TaskID: %d\n", vertices[i].TaskID))
+			_, err = file.WriteString(fmt.Sprintf("    VertexID: %d\n", vertices[i].VertexID))
+			_, err = file.WriteString(fmt.Sprintf("    Jitter: %d\n", vertices[i].Jitter))
+			_, err = file.WriteString(fmt.Sprintf("    BCET: %d\n", vertices[i].BCET))
+			_, err = file.WriteString(fmt.Sprintf("    WCET: %d\n", vertices[i].WCET))
+			_, err = file.WriteString(fmt.Sprintf("    Period: %d\n", task.Period))
+			_, err = file.WriteString(fmt.Sprintf("    Deadline: %d\n", task.Deadline))
+
+			succStr := "["
+			for _, succ := range vertices[i].Successors {
+				succStr += strconv.Itoa(succ) + ","
+			}
+			if len(succStr) > 1 {
+				succStr = succStr[:len(succStr)-1]
+			}
+			succStr += "]"
+			_, err = file.WriteString(fmt.Sprintf("    Successors: %s\n", succStr))
+
+			if err != nil {
+				logger.LogFatal("Error writing to file: " + err.Error())
+			}
+		}
 	}
 
 	// write the dot file
 	if makeDotFile {
-		dotPath := taskPath[:len(taskPath)-4] + ".dot"
+		dotPath := taskPath[:strings.LastIndex(taskPath, ".")] + ".dot"
 		os.MkdirAll(filepath.Dir(dotPath), os.ModePerm)
 		// write the dot file
 		writerDot, err := os.Create(dotPath)
@@ -152,36 +198,16 @@ func generateRandomDAG(taskPath string, rootNodeNum, maxBranch, maxDepth int, ma
 }
 
 // GenerateRandomDAGs function to generate random DAGs
-func GenerateRandomDAGs(taskSetPath string, rootNodeNum, maxBranch, maxDepth int, makeDotFile bool) {
-	// first we have to find all the task sets with csv extension in
-	var taskSetPaths []string
-	err := filepath.Walk(taskSetPath, func(path string, info os.FileInfo, err error) error {
-		// check folder name to be "tasksets"
-		if filepath.Ext(path) == ".csv" && path[len(path)-9:] != ".prec.csv" &&
-			filepath.Base(filepath.Dir(path)) == "tasksets" {
-			taskSetPaths = append(taskSetPaths, path)
-		}
-		return nil
-	})
+func GenerateRandomDAGs(taskSetPath string, rootNodeNum, maxBranch, maxDepth int, makeDotFile bool, outputFormat string) {
 
-	if err != nil {
-		logger.LogFatal("Cannot find any task set in the folder: " + taskSetPath)
-	} else {
-		// print the number of task sets
-		logger.LogInfo("Number of founded task sets: " + strconv.Itoa(len(taskSetPaths)))
-	}
-
-	if err != nil {
-		logger.LogFatal("Cannot find any task set in the folder: " + taskSetPath)
-	}
-
+	taskSetPaths := findTaskSetPaths(taskSetPath, outputFormat)
 	// now we have to generate the job sets
 	for _, taskSetPath := range taskSetPaths {
 		// make sure that the file does not exist
-		predPath := taskSetPath[:len(taskSetPath)-4] + ".prec" + ".csv"
+		predPath := taskSetPath[:strings.LastIndex(taskSetPath, ".")] + ".prec." + outputFormat
 		if _, err := os.Stat(predPath); os.IsNotExist(err) {
 			logger.LogInfo("Generating DAG for: " + taskSetPath)
-			generateRandomDAG(taskSetPath, rootNodeNum, maxBranch, maxDepth, makeDotFile)
+			generateRandomDAG(taskSetPath, rootNodeNum, maxBranch, maxDepth, makeDotFile, outputFormat)
 		} else {
 			logger.LogInfo(fmt.Sprintf("%s exists", predPath))
 		}
@@ -189,28 +215,8 @@ func GenerateRandomDAGs(taskSetPath string, rootNodeNum, maxBranch, maxDepth int
 }
 
 // GenerateRandomDAGsParallel function to generate random DAGs in parallel
-func GenerateRandomDAGsParallel(taskSetPath string, rootNodeNum, maxBranch, maxDepth int, makeDotFile bool) {
-	// first we have to find all the task sets with csv extension in
-	var taskSetPaths []string
-	err := filepath.Walk(taskSetPath, func(path string, info os.FileInfo, err error) error {
-		// check folder name to be "tasksets"
-		if filepath.Ext(path) == ".csv" && path[len(path)-9:] != ".prec.csv" &&
-			filepath.Base(filepath.Dir(path)) == "tasksets" {
-			taskSetPaths = append(taskSetPaths, path)
-		}
-		return nil
-	})
-
-	if err != nil {
-		logger.LogFatal("Cannot find any task set in the folder: " + taskSetPath)
-	} else {
-		// print the number of task sets
-		logger.LogInfo("Number of founded task sets: " + strconv.Itoa(len(taskSetPaths)))
-	}
-
-	if err != nil {
-		logger.LogFatal("Cannot find any task set in the folder: " + taskSetPath)
-	}
+func GenerateRandomDAGsParallel(taskSetPath string, rootNodeNum, maxBranch, maxDepth int, makeDotFile bool, outputFormat string) {
+	taskSetPaths := findTaskSetPaths(taskSetPath, outputFormat)
 
 	// now we have to generate the DAGs
 	var wg sync.WaitGroup
@@ -219,10 +225,10 @@ func GenerateRandomDAGsParallel(taskSetPath string, rootNodeNum, maxBranch, maxD
 		go func(taskSetPaths string) {
 			defer wg.Done()
 			// make sure that the file does not exist
-			predPath := taskSetPath[:len(taskSetPath)-4] + ".prec" + ".csv"
+			predPath := taskSetPath[:strings.LastIndex(taskSetPath, ".")] + ".prec." + outputFormat
 			if _, err := os.Stat(predPath); os.IsNotExist(err) {
 				logger.LogInfo("Generating DAG for: " + taskSetPath)
-				go generateRandomDAG(taskSetPath, rootNodeNum, maxBranch, maxDepth, makeDotFile)
+				generateRandomDAG(taskSetPath, rootNodeNum, maxBranch, maxDepth, makeDotFile, outputFormat)
 			} else {
 				logger.LogInfo(fmt.Sprintf("%s exists", predPath))
 			}

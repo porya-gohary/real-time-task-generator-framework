@@ -99,20 +99,20 @@ func main() {
 		if config.RunParallel {
 			if config.DAGType == "fork-join" {
 				lib.GenerateDAGSetsParallel(config.Path, config.ForkProb, config.EdgeProb, config.MaxBranch,
-					config.MaxVertices, config.MaxDepth, config.MakeDotFile)
+					config.MaxVertices, config.MaxDepth, config.MakeDotFile, config.OutputFormat)
 			} else if config.DAGType == "random" {
 				lib.GenerateRandomDAGsParallel(config.Path, config.NumRoots, config.MaxBranch, config.MaxDepth,
-					config.MakeDotFile)
+					config.MakeDotFile, config.OutputFormat)
 			} else {
 				logger.LogFatal("Invalid DAG type")
 			}
 		} else {
 			if config.DAGType == "fork-join" {
 				lib.GenerateDAGSets(config.Path, config.ForkProb, config.EdgeProb, config.MaxBranch, config.MaxVertices,
-					config.MaxDepth, config.MakeDotFile)
+					config.MaxDepth, config.MakeDotFile, config.OutputFormat)
 			} else if config.DAGType == "random" {
 				lib.GenerateRandomDAGs(config.Path, config.NumRoots, config.MaxBranch, config.MaxDepth,
-					config.MakeDotFile)
+					config.MakeDotFile, config.OutputFormat)
 			} else {
 				logger.LogFatal("Invalid DAG type")
 			}
