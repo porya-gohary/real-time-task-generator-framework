@@ -71,6 +71,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	if config.OutputFormat != "csv" && config.OutputFormat != "yaml" {
+		logger.LogFatal("Invalid output format")
+	}
+
 	// Print a warning that the automotive method is not consider number of tasks
 	if config.PeriodDistribution == "automotive" && config.UtilDistribution == "automotive" {
 		logger.LogWarning("The automotive method does not consider the number of tasks")
