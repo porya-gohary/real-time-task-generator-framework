@@ -146,7 +146,7 @@ func generateDAGFromTask(task common.Task, pPar, pAdd float64, maxParBranches, m
 	bcetList := generateBCET(task.BCET, task.WCET, wcetList)
 
 	for i := range vertices {
-		vertices[i].TaskID, _ = strconv.Atoi(task.Name[1:])
+		vertices[i].TaskID = task.TaskID
 		vertices[i].Jitter = task.Jitter
 		vertices[i].BCET = bcetList[i]
 		vertices[i].WCET = wcetList[i]
@@ -196,7 +196,7 @@ func generateDAGSet(taskPath string, pPar, pAdd float64, maxParBranches, maxVert
 			newDAG := generateDAGFromTask(*task, pPar, pAdd, maxParBranches, maxVertices, maxDepth)
 			// first we have to write the task
 			if makeDotFile {
-				dotFile += newDAG.GenerateDotFile(task.Name, vertexIDCounter)
+				dotFile += newDAG.GenerateDotFile("T"+string(task.TaskID), vertexIDCounter)
 			}
 			for _, vertex := range newDAG {
 				lineTemp := []string{strconv.Itoa(vertex.TaskID), strconv.Itoa(vertex.VertexID + vertexIDCounter),
@@ -230,7 +230,7 @@ func generateDAGSet(taskPath string, pPar, pAdd float64, maxParBranches, maxVert
 			newDAG := generateDAGFromTask(*task, pPar, pAdd, maxParBranches, maxVertices, maxDepth)
 			// first we have to write the task
 			if makeDotFile {
-				dotFile += newDAG.GenerateDotFile(task.Name, vertexIDCounter)
+				dotFile += newDAG.GenerateDotFile("T"+string(task.TaskID), vertexIDCounter)
 			}
 			for _, vertex := range newDAG {
 				// write the vertex set to the file with yaml format

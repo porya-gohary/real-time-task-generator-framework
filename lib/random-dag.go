@@ -24,11 +24,9 @@ func generateDAG(taskSet common.TaskSet, rootNodeNum, maxBranch, maxDepth int) c
 	// make a vertex set and assign each task to a vertex
 	var vertices common.VertexSet
 	for _, task := range taskSet {
-		taskID, _ := strconv.Atoi(task.Name[1:])
-
 		vertices = append(vertices, &common.Vertex{
-			TaskID:   taskID,
-			VertexID: taskID,
+			TaskID:   task.TaskID,
+			VertexID: task.TaskID,
 			Jitter:   task.Jitter,
 			BCET:     task.BCET,
 			WCET:     task.WCET,

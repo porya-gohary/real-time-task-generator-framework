@@ -11,7 +11,7 @@ import (
 )
 
 type Task struct {
-	Name     string
+	TaskID   int
 	Jitter   int
 	BCET     int
 	WCET     int
@@ -23,7 +23,7 @@ type Task struct {
 type TaskSet []*Task
 
 func (t *Task) String() string {
-	return "{ " + t.Name + " " + string(t.Jitter) + " " + string(t.BCET) + " " + string(t.WCET) +
+	return "{ " + string(t.TaskID) + " " + string(t.Jitter) + " " + string(t.BCET) + " " + string(t.WCET) +
 		" " + string(t.Period) + " " + string(t.Deadline) + " " + string(t.PE) + " }"
 }
 
@@ -95,13 +95,13 @@ func (ts TaskSet) WriteTaskSet(path string) error {
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
-	headers := []string{"Name", "Jitter", "BCET", "WCET", "Period", "Deadline", "PE"}
+	headers := []string{"TaskID", "Jitter", "BCET", "WCET", "Period", "Deadline", "PE"}
 	writer.Write(headers)
 
 	for i := range ts {
 
 		row := []string{
-			fmt.Sprintf("T%d", i),
+			fmt.Sprintf("%d", i),
 			fmt.Sprintf("%d", ts[i].Jitter),
 			strconv.Itoa(ts[i].BCET),
 			strconv.Itoa(ts[i].WCET),
@@ -129,7 +129,7 @@ func (ts TaskSet) WriteTaskSetYAML(path string) error {
 	_, err = file.WriteString("taskset:\n")
 	// then, we add the tasks
 	for i, t := range ts {
-		_, err = file.WriteString(fmt.Sprintf("  - Name: T%d\n", i))
+		_, err = file.WriteString(fmt.Sprintf("  - TaskID: %d\n", i))
 		_, err = file.WriteString(fmt.Sprintf("    Jitter: %d\n", t.Jitter))
 		_, err = file.WriteString(fmt.Sprintf("    BCET: %d\n", t.BCET))
 		_, err = file.WriteString(fmt.Sprintf("    WCET: %d\n", t.WCET))
@@ -165,7 +165,7 @@ func ReadTaskSet(path string) (TaskSet, error) {
 	}
 
 	for _, record := range records {
-		tempName := record[0]
+		tempID, _ := strconv.Atoi(record[0])
 		tempJitter, _ := strconv.Atoi(record[1])
 		tempBCET, _ := strconv.Atoi(record[2])
 		tempWCET, _ := strconv.Atoi(record[3])
@@ -174,7 +174,7 @@ func ReadTaskSet(path string) (TaskSet, error) {
 		tempPE, _ := strconv.Atoi(record[6])
 
 		tasks = append(tasks, &Task{
-			Name:     tempName,
+			TaskID:   tempID,
 			Jitter:   tempJitter,
 			BCET:     tempBCET,
 			WCET:     tempWCET,
@@ -206,7 +206,7 @@ func ReadTaskSetYAML(path string) (TaskSet, error) {
 
 	// then, we need to iterate over the task set
 	for _, t := range taskSet["taskset"] {
-		tempName := t["Name"].(string)
+		tempID := int(t["TaskID"].(int))
 		tempJitter := int(t["Jitter"].(int))
 		tempBCET := int(t["BCET"].(int))
 		tempWCET := int(t["WCET"].(int))
@@ -215,7 +215,7 @@ func ReadTaskSetYAML(path string) (TaskSet, error) {
 		tempPE := int(t["PE"].(int))
 
 		tasks = append(tasks, &Task{
-			Name:     tempName,
+			TaskID:   tempID,
 			Jitter:   tempJitter,
 			BCET:     tempBCET,
 			WCET:     tempWCET,
