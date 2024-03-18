@@ -221,7 +221,7 @@ func generateDAGSet(taskPath string, pPar, pAdd float64, maxParBranches, maxVert
 		}
 	} else {
 		// we need to add vertexset as the root element
-		_, err = file.WriteString("- vertexset:\n")
+		_, err = file.WriteString("vertexset:\n")
 		if err != nil {
 			logger.LogFatal("Error writing to file: " + err.Error())
 		}
@@ -241,6 +241,7 @@ func generateDAGSet(taskPath string, pPar, pAdd float64, maxParBranches, maxVert
 				_, err = file.WriteString(fmt.Sprintf("    WCET: %d\n", vertex.WCET))
 				_, err = file.WriteString(fmt.Sprintf("    Period: %d\n", task.Period))
 				_, err = file.WriteString(fmt.Sprintf("    Deadline: %d\n", task.Deadline))
+				_, err = file.WriteString(fmt.Sprintf("    PE: %d\n", task.PE))
 
 				succStr := "["
 				for _, succ := range vertex.Successors {

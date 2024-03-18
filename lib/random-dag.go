@@ -145,7 +145,7 @@ func generateRandomDAG(taskPath string, rootNodeNum, maxBranch, maxDepth int, ma
 		}
 	} else {
 		// we need to add vertexset as the root element
-		_, err = file.WriteString("- vertexset:\n")
+		_, err = file.WriteString("vertexset:\n")
 		if err != nil {
 			logger.LogFatal("Error writing to file: " + err.Error())
 		}
@@ -159,6 +159,7 @@ func generateRandomDAG(taskPath string, rootNodeNum, maxBranch, maxDepth int, ma
 			_, err = file.WriteString(fmt.Sprintf("    WCET: %d\n", vertices[i].WCET))
 			_, err = file.WriteString(fmt.Sprintf("    Period: %d\n", task.Period))
 			_, err = file.WriteString(fmt.Sprintf("    Deadline: %d\n", task.Deadline))
+			_, err = file.WriteString(fmt.Sprintf("    PE: %d\n", task.PE))
 
 			succStr := "["
 			for _, succ := range vertices[i].Successors {
