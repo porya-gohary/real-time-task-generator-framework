@@ -26,6 +26,7 @@ type Config struct {
 	Jitter             float64 `yaml:"jitter"`
 	ConstantJitter     bool    `yaml:"constant_jitter"`
 	MaxJobs            int     `yaml:"max_jobs"`
+	MappingHeuristic   int     `yaml:"mapping_heuristic"`
 	GenerateDAGs       bool    `yaml:"generate_dags"`
 	MakeDotFile        bool    `yaml:"generate_dot"`
 	DAGType            string  `yaml:"dag_type"`
@@ -89,12 +90,12 @@ func main() {
 	if config.RunParallel {
 		lib.CreateTaskSetsParallel(config.Path, config.NumCores, config.NumSets, config.Tasks,
 			config.Utilization, config.UtilDistribution, config.PeriodDistribution, config.PeriodRange, config.Periods,
-			config.ExecVariation, config.Jitter, config.ConstantJitter, config.MaxJobs,
+			config.ExecVariation, config.Jitter, config.ConstantJitter, config.MaxJobs, config.MappingHeuristic,
 			config.OutputFormat, logger)
 	} else {
 		lib.CreateTaskSets(config.Path, config.NumCores, config.NumSets, config.Tasks,
 			config.Utilization, config.UtilDistribution, config.PeriodDistribution, config.PeriodRange, config.Periods,
-			config.ExecVariation, config.Jitter, config.ConstantJitter, config.MaxJobs,
+			config.ExecVariation, config.Jitter, config.ConstantJitter, config.MaxJobs, config.MappingHeuristic,
 			config.OutputFormat, logger)
 	}
 

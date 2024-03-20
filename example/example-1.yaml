@@ -27,6 +27,8 @@ jitter: 0.1
 constant_jitter: false
 # maximum number of jobs per task set
 max_jobs: 1000
+# mapping heuristic to use 0. No mapping, 1. Worst-fit, 2. Best-fit, 3. First-fit
+mapping_heuristic: 0
 # ---------------------------------------------------------------------
 # Generate DAGs from the task sets
 generate_dags: false

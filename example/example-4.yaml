@@ -22,11 +22,13 @@ utilization: 1.8
 # Execution time variation in percentage of the execution time
 exec_variation: 0.1
 # Jitter in percentage of the period for variable jitter and in time units for constant jitter
-jitter: 0.1
+jitter: 0.01
 # Constant or variable jitter
 constant_jitter: false
 # maximum number of jobs per task set
 max_jobs: 1000
+# mapping heuristic to use 0. No mapping, 1. Worst-fit, 2. Best-fit, 3. First-fit
+mapping_heuristic: 3
 # ---------------------------------------------------------------------
 # Generate DAGs from the task sets
 generate_dags: true
@@ -49,7 +51,7 @@ num_roots: 2
 max_depth: 6
 # ---------------------------------------------------------------------
 # Generate job sets from the task sets
-generate_job_sets: true
+generate_job_sets: false
 # Priority assignment algorithm: "RM", "DM", "EDF" (only for the job sets)
 priority_assignment: "RM"
 # Run task set generation in parallel

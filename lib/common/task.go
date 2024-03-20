@@ -84,6 +84,73 @@ func (ts TaskSet) NumJobs(hyperperiod int) int {
 	return numJobs
 }
 
+// MapTasks maps the tasks to the cores
+func (ts *TaskSet) MapTasks(numCores int, heuristic int) {
+	coreUtils := make([]float64, numCores)
+	if heuristic == 0 {
+		// 0. No mapping
+		for i := range *ts {
+			(*ts)[i].PE = 0
+		}
+	} else if heuristic == 1 {
+		// 1. Worst fit decreasing
+		for i := range *ts {
+			minCore := 0
+			for j := 1; j < numCores; j++ {
+				if coreUtils[j] < coreUtils[minCore] {
+					minCore = j
+				}
+			}
+			coreUtils[minCore] += float64((*ts)[i].WCET) / float64((*ts)[i].Period)
+			(*ts)[i].PE = minCore
+		}
+	} else if heuristic == 2 {
+		// 2. Best fit decreasing
+		for _, t := range *ts {
+			ut := float64(t.WCET) / float64(t.Period)
+			var minCores []int
+			for i := 0; i < numCores; i++ {
+				if coreUtils[i]+ut <= 1 {
+					minCores = append(minCores, i)
+				}
+			}
+			if len(minCores) == 0 {
+				minCore := 0
+				for i := 1; i < numCores; i++ {
+					if coreUtils[i] < coreUtils[minCore] {
+						minCore = i
+					}
+				}
+				coreUtils[minCore] += ut
+				t.PE = minCore
+				continue
+			}
+			minCore := minCores[0]
+			for _, c := range minCores {
+				if coreUtils[c] < coreUtils[minCore] {
+					minCore = c
+				}
+			}
+			coreUtils[minCore] += ut
+			t.PE = minCore
+		}
+	} else if heuristic == 3 {
+		// 3. First fit decreasing
+		for i := range *ts {
+			ut := float64((*ts)[i].WCET) / float64((*ts)[i].Period)
+			var minCore int
+			for j := range coreUtils {
+				if coreUtils[j]+ut <= 1 {
+					minCore = j
+					break
+				}
+			}
+			coreUtils[minCore] += ut
+			(*ts)[i].PE = minCore
+		}
+	}
+}
+
 // WriteTaskSet function to write a task set to a CSV file
 func (ts TaskSet) WriteTaskSet(path string) error {
 	file, err := os.Create(path)
