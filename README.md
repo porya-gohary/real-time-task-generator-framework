@@ -80,6 +80,7 @@ Currently, the following priority assignment algorithms are supported:
 - Deadline Monotonic
 - Earliest Deadline First
 
+⚠️ Note: In addition to the features already listed, this framework is designed to support parallel execution. This means that multiple tasks can be run concurrently, significantly improving the performance and efficiency of the system, especially when dealing with large tasksets.
 
 ## 📄 Output Format
 The generated taskset can be saved in either CSV or YAML format. 
@@ -98,6 +99,10 @@ With your feedback and conversation, you can assist me in developing this applic
 Copyright © 2024 [Pourya Gohari](https://pourya-gohari.ir).
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🔄 Previous Work
+This project is a newer version of the [Real-time task generator](https://github.com/porya-gohary/real-time-task-generators) project. The previous project was written in Python and was not as efficient as the current project. The current project is written in GO and is designed to be more efficient, scalable and provide more options.
+
 
 ## 📚 References
 If you are interested in the task generation algorithms, you can refer to the following papers:
