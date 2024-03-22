@@ -17,9 +17,9 @@
 <p align="center">
   <a href="#-required-packages">Dependencies</a> •
   <a href="#-build-instructions">Build</a> •
-  <a href="#-input-format">Input Format</a> •
-  <a href="#%EF%B8%8F-usage">Usage</a> •
+  <a href="#-configuration-format">Configuration Format</a> •
   <a href="#-features">Features</a> •
+  <a href="#-output-format">Output format</a> •
   <a href="#-limitations">Limitations</a> •
   <a href="#-license">License</a>
 </p>
