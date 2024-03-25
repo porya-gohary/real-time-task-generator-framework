@@ -4,7 +4,7 @@
   <br>
 </h1>
 
-<h4 align="center">A collection of taskset generators for real-time systems in GO</h4>
+<h4 align="center">A collection of task set generators for real-time systems in GO</h4>
 <p align="center">
   <a href="https://github.com/porya-gohary/real-time-task-generator-framework/blob/master/LICENSE">
     <img src="https://img.shields.io/github/license/porya-gohary/real-time-task-generator-framework"
