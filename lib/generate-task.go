@@ -16,9 +16,9 @@ var logger *common.VerboseLogger
 var bar *progressbar.ProgressBar
 
 // create a task set
-func createTaskSet(path string, numCore, nTasks int, seed int64, totalUtilization float64, utilDist string, periodDist string,
-	periodRange []int, disPeriods []int, alpha float64, jitter float64, constantJitter bool,
-	maxJobs int, mappingHeuristic int, outputFormat string) error {
+func createTaskSet(path string, numCore, nTasks int, seed int64, totalUtilization float64, utilDist string,
+	utilBound []float64, periodDist string, periodRange []int, disPeriods []int, alpha float64, jitter float64,
+	constantJitter bool, maxJobs int, mappingHeuristic int, outputFormat string) error {
 	rand.Seed(seed)
 
 	tasks := common.TaskSet{}
@@ -35,7 +35,7 @@ func createTaskSet(path string, numCore, nTasks int, seed int64, totalUtilizatio
 			util = uunifastDiscard(nTasks, totalUtilization, 1.0)
 		} else if utilDist == "rand-fixed-sum" {
 			// 2. RandFixedSum algorithm
-			util = StaffordRandFixedSum(nTasks, totalUtilization)
+			util = StaffordRandFixedSum(nTasks, totalUtilization, utilBound[0], utilBound[1])
 		} else if utilDist == "automotive" && periodDist == "automotive" {
 			// 3. Automotive method
 			tasks := generateAutomotiveTaskSet(totalUtilization)
@@ -158,8 +158,8 @@ func createTaskSet(path string, numCore, nTasks int, seed int64, totalUtilizatio
 
 // CreateTaskSets creates a number of task sets and writes them to the specified path
 func CreateTaskSets(path string, numCore, numSets int, tasks int, utilization float64, utilDistribution string,
-	periodDistribution string, periodRange []int, disPeriods []int, execVariation float64, jitter float64,
-	constantJitter bool, maxJobs int, mappingHeuristic int, outputFormat string, lr *common.VerboseLogger) {
+	utilBound []float64, periodDistribution string, periodRange []int, disPeriods []int, execVariation float64,
+	jitter float64, constantJitter bool, maxJobs int, mappingHeuristic int, outputFormat string, lr *common.VerboseLogger) {
 	// add spec to the path before output folder
 	path = filepath.Join(path, fmt.Sprintf("%s-utilDist", utilDistribution))
 	path = filepath.Join(path, fmt.Sprintf("%s-perDist", periodDistribution))
@@ -185,7 +185,7 @@ func CreateTaskSets(path string, numCore, numSets int, tasks int, utilization fl
 		file := fmt.Sprintf("%s_%d.%s", periodDistribution, i, outputFormat)
 		taskSetPath := filepath.Join(path, file)
 		if _, err := os.Stat(taskSetPath); os.IsNotExist(err) {
-			if err := createTaskSet(taskSetPath, numCore, tasks, time.Now().UnixNano(), utilization, utilDistribution,
+			if err := createTaskSet(taskSetPath, numCore, tasks, time.Now().UnixNano(), utilization, utilDistribution, utilBound,
 				periodDistribution, periodRange, disPeriods, execVariation, jitter, constantJitter,
 				maxJobs, mappingHeuristic, outputFormat); err != nil {
 				fmt.Println(err)
@@ -203,8 +203,8 @@ func CreateTaskSets(path string, numCore, numSets int, tasks int, utilization fl
 
 // CreateTaskSetsParallel creates task sets in parallel using the given parameters
 func CreateTaskSetsParallel(path string, numCore, numSets int, tasks int, utilization float64, utilDistribution string,
-	periodDistribution string, periodRange []int, disPeriods []int, execVariation float64, jitter float64,
-	constantJitter bool, maxJobs int, mappingHeuristic int, outputFormat string, lr *common.VerboseLogger) {
+	utilBound []float64, periodDistribution string, periodRange []int, disPeriods []int, execVariation float64,
+	jitter float64, constantJitter bool, maxJobs int, mappingHeuristic int, outputFormat string, lr *common.VerboseLogger) {
 	// add spec to the path before output folder
 	path = filepath.Join(path, fmt.Sprintf("%s-utilDist", utilDistribution))
 	path = filepath.Join(path, fmt.Sprintf("%s-perDist", periodDistribution))
@@ -234,7 +234,7 @@ func CreateTaskSetsParallel(path string, numCore, numSets int, tasks int, utiliz
 			taskSetPath := filepath.Join(path, file)
 			if _, err := os.Stat(taskSetPath); os.IsNotExist(err) {
 				if err := createTaskSet(taskSetPath, numCore, tasks, time.Now().UnixNano(), utilization, utilDistribution,
-					periodDistribution, periodRange, disPeriods, execVariation, jitter,
+					utilBound, periodDistribution, periodRange, disPeriods, execVariation, jitter,
 					constantJitter, maxJobs, mappingHeuristic, outputFormat); err != nil {
 					fmt.Println(err)
 				} else {

@@ -6,6 +6,8 @@ output_format: "csv"
 number_of_cores: 4
 # Utilization distribution to generate task sets: "uunifast", "rand-fixed-sum", "automotive"
 utilization_distribution: "rand-fixed-sum"
+# Utilization bound for each task (only for rand-fixed-sum)
+utilization_bound: [0.3, 1.2]
 # Mathematical distribution to generate periods: "uniform", "log-uniform",
 # "uniform-discrete" ,"log-uniform-discrete", "automotive"
 period_distribution: "uniform-discrete"

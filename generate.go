@@ -12,34 +12,35 @@ import (
 
 // Config represents the structure of the YAML configuration file
 type Config struct {
-	Path               string  `yaml:"path"`
-	OutputFormat       string  `yaml:"output_format"`
-	NumCores           int     `yaml:"number_of_cores"`
-	UtilDistribution   string  `yaml:"utilization_distribution"`
-	PeriodDistribution string  `yaml:"period_distribution"`
-	PeriodRange        []int   `yaml:"period_range"`
-	Periods            []int   `yaml:"periods"`
-	NumSets            int     `yaml:"num_sets"`
-	Tasks              int     `yaml:"tasks"`
-	Utilization        float64 `yaml:"utilization"`
-	ExecVariation      float64 `yaml:"exec_variation"`
-	Jitter             float64 `yaml:"jitter"`
-	ConstantJitter     bool    `yaml:"constant_jitter"`
-	MaxJobs            int     `yaml:"max_jobs"`
-	MappingHeuristic   int     `yaml:"mapping_heuristic"`
-	GenerateDAGs       bool    `yaml:"generate_dags"`
-	MakeDotFile        bool    `yaml:"generate_dot"`
-	DAGType            string  `yaml:"dag_type"`
-	ForkProb           float64 `yaml:"fork_probability"`
-	EdgeProb           float64 `yaml:"edge_probability"`
-	MaxBranch          int     `yaml:"max_branches"`
-	MaxVertices        int     `yaml:"max_vertices"`
-	NumRoots           int     `yaml:"num_roots"`
-	MaxDepth           int     `yaml:"max_depth"`
-	GenerateJobs       bool    `yaml:"generate_job_sets"`
-	PriorityAssignment string  `yaml:"priority_assignment"`
-	RunParallel        bool    `yaml:"run_parallel"`
-	Verbose            int     `yaml:"verbose"`
+	Path               string    `yaml:"path"`
+	OutputFormat       string    `yaml:"output_format"`
+	NumCores           int       `yaml:"number_of_cores"`
+	UtilDistribution   string    `yaml:"utilization_distribution"`
+	UtilBounds         []float64 `yaml:"utilization_bound"`
+	PeriodDistribution string    `yaml:"period_distribution"`
+	PeriodRange        []int     `yaml:"period_range"`
+	Periods            []int     `yaml:"periods"`
+	NumSets            int       `yaml:"num_sets"`
+	Tasks              int       `yaml:"tasks"`
+	Utilization        float64   `yaml:"utilization"`
+	ExecVariation      float64   `yaml:"exec_variation"`
+	Jitter             float64   `yaml:"jitter"`
+	ConstantJitter     bool      `yaml:"constant_jitter"`
+	MaxJobs            int       `yaml:"max_jobs"`
+	MappingHeuristic   int       `yaml:"mapping_heuristic"`
+	GenerateDAGs       bool      `yaml:"generate_dags"`
+	MakeDotFile        bool      `yaml:"generate_dot"`
+	DAGType            string    `yaml:"dag_type"`
+	ForkProb           float64   `yaml:"fork_probability"`
+	EdgeProb           float64   `yaml:"edge_probability"`
+	MaxBranch          int       `yaml:"max_branches"`
+	MaxVertices        int       `yaml:"max_vertices"`
+	NumRoots           int       `yaml:"num_roots"`
+	MaxDepth           int       `yaml:"max_depth"`
+	GenerateJobs       bool      `yaml:"generate_job_sets"`
+	PriorityAssignment string    `yaml:"priority_assignment"`
+	RunParallel        bool      `yaml:"run_parallel"`
+	Verbose            int       `yaml:"verbose"`
 }
 
 var logger *common.VerboseLogger
@@ -85,18 +86,26 @@ func main() {
 		logger.LogFatal("The utilization distribution is automotive but the period distribution is not automotive")
 	}
 
+	// Print a fatal error if the period distribution is not fixed sum and there is a utilization bound
+	if config.UtilDistribution != "rand-fixed-sum" && len(config.UtilBounds) > 0 {
+		logger.LogFatal("The utilization bounds are only valid for rand-fixed-sum utilization distribution")
+	} else if config.UtilDistribution == "rand-fixed-sum" && len(config.UtilBounds) == 0 {
+		// set default utilization bounds
+		config.UtilBounds = []float64{0.0, 1.0}
+	}
+
 	//	then we need to create the task sets
 	// 	we can run the task generation in parallel if the config file specifies it
 	if config.RunParallel {
 		lib.CreateTaskSetsParallel(config.Path, config.NumCores, config.NumSets, config.Tasks,
-			config.Utilization, config.UtilDistribution, config.PeriodDistribution, config.PeriodRange, config.Periods,
-			config.ExecVariation, config.Jitter, config.ConstantJitter, config.MaxJobs, config.MappingHeuristic,
-			config.OutputFormat, logger)
+			config.Utilization, config.UtilDistribution, config.UtilBounds, config.PeriodDistribution, config.PeriodRange,
+			config.Periods, config.ExecVariation, config.Jitter, config.ConstantJitter, config.MaxJobs,
+			config.MappingHeuristic, config.OutputFormat, logger)
 	} else {
 		lib.CreateTaskSets(config.Path, config.NumCores, config.NumSets, config.Tasks,
-			config.Utilization, config.UtilDistribution, config.PeriodDistribution, config.PeriodRange, config.Periods,
-			config.ExecVariation, config.Jitter, config.ConstantJitter, config.MaxJobs, config.MappingHeuristic,
-			config.OutputFormat, logger)
+			config.Utilization, config.UtilDistribution, config.UtilBounds, config.PeriodDistribution, config.PeriodRange,
+			config.Periods, config.ExecVariation, config.Jitter, config.ConstantJitter, config.MaxJobs,
+			config.MappingHeuristic, config.OutputFormat, logger)
 	}
 
 	// then we need to generate the DAGs

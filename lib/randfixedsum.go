@@ -5,17 +5,18 @@ import (
 	"math/rand"
 )
 
-// StaffordRandFixedSum generates nsets sets of n numbers whose sum is approximately u.
-func StaffordRandFixedSum(n int, u float64) []float64 {
-	// If n is less than u, return nil
-	if n < int(u) {
-		return nil
-	}
+// StaffordRandFixedSum generates an n by m array x, each of whose m columns
+// contains n random values lying in the interval [a,b], but
+// subject to the condition that their sum be equal to s.
+func StaffordRandFixedSum(n int, u, a, b float64) []float64 {
 
 	// Deal with n=1 case
 	if n == 1 {
 		return []float64{u}
 	}
+
+	// Rescale to a unit cube: 0 <= x(i) <= 1
+	u = (u - float64(n)*a) / (b - a)
 
 	k := int(math.Min(u, float64(n-1)))
 	s := u
@@ -81,6 +82,11 @@ func StaffordRandFixedSum(n int, u float64) []float64 {
 	}
 
 	x[n-1] = sm + pr*s
+
+	// rescale from the unit cube to the desired interval
+	for i := range x {
+		x[i] = a + x[i]*(b-a)
+	}
 
 	return x
 }

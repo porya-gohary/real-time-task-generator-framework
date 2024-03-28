@@ -6,6 +6,8 @@ output_format: "yaml"
 number_of_cores: 4
 # Utilization distribution to generate task sets: "uunifast", "rand-fixed-sum", "automotive"
 utilization_distribution: "rand-fixed-sum"
+# Utilization bound for each task (only for rand-fixed-sum)
+utilization_bound: [0.1, 0.9]
 # Mathematical distribution to generate periods: "uniform", "log-uniform",
 # "uniform-discrete" ,"log-uniform-discrete", "automotive"
 period_distribution: "uniform-discrete"
@@ -14,11 +16,11 @@ period_range: [1000, 20000]
 # Discrete periods for the period distribution
 periods: [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000, 15000, 16000, 17000, 18000, 19000, 20000]
 # Number of task sets
-num_sets: 2
+num_sets: 1000
 # Number of tasks in the task set
 tasks: 10
 # Utilization of the task set
-utilization: 1.8
+utilization: 1.0
 # Execution time variation in percentage of the execution time
 exec_variation: 0.1
 # Jitter in percentage of the period for variable jitter and in time units for constant jitter
@@ -26,9 +28,9 @@ jitter: 0.01
 # Constant or variable jitter
 constant_jitter: false
 # maximum number of jobs per task set
-max_jobs: 1000
+max_jobs: 5000
 # mapping heuristic to use 0. No mapping, 1. Worst-fit, 2. Best-fit, 3. First-fit
-mapping_heuristic: 3
+mapping_heuristic: 2
 # ---------------------------------------------------------------------
 # Generate DAGs from the task sets
 generate_dags: true
