@@ -137,9 +137,9 @@ func main() {
 			priorityAssignment = lib.EDF
 		}
 		if config.RunParallel {
-			lib.GenerateJobSetsParallel(config.Path, priorityAssignment)
+			lib.GenerateJobSetsParallel(config.Path, priorityAssignment, config.OutputFormat)
 		} else {
-			lib.GenerateJobSets(config.Path, priorityAssignment)
+			lib.GenerateJobSets(config.Path, priorityAssignment, config.OutputFormat)
 		}
 	}
 

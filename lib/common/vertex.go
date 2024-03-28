@@ -2,6 +2,7 @@ package common
 
 import (
 	"encoding/csv"
+	"gopkg.in/yaml.v2"
 	"os"
 	"strconv"
 	"strings"
@@ -103,6 +104,53 @@ func ReadVertexSet(path string) (VertexSet, error) {
 		})
 	}
 
+	return vertices, nil
+}
+
+// ReadVertexSetYAML reads a vertex set from a YAML file
+func ReadVertexSetYAML(path string) (VertexSet, error) {
+	// read the vertex set from the YAML file
+	var vertices VertexSet
+	file, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	// read the vertex set from the YAML file
+	// first, unmarshal the YAML file
+	var vertexSet map[string][]map[string]interface{}
+	err = yaml.Unmarshal(file, &vertexSet)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, vertex := range vertexSet["vertexset"] {
+		// then, we need to iterate over the vertex set
+		tempTaskID := int(vertex["TaskID"].(int))
+		tempVertexID := int(vertex["VertexID"].(int))
+		tempJitter := int(vertex["Jitter"].(int))
+		tempBCET := int(vertex["BCET"].(int))
+		tempWCET := int(vertex["WCET"].(int))
+		tempPeriod := int(vertex["Period"].(int))
+		tempDeadline := int(vertex["Deadline"].(int))
+
+		var successors []int
+		for _, successor := range vertex["Successors"].([]interface{}) {
+			successors = append(successors, int(successor.(int)))
+		}
+
+		vertices = append(vertices, &Vertex{
+			TaskID:     tempTaskID,
+			VertexID:   tempVertexID,
+			Jitter:     tempJitter,
+			BCET:       tempBCET,
+			WCET:       tempWCET,
+			Period:     tempPeriod,
+			Deadline:   tempDeadline,
+			Successors: successors,
+		})
+
+	}
 	return vertices, nil
 }
 

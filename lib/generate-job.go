@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"task-generator/lib/common"
 )
@@ -18,15 +19,25 @@ const (
 )
 
 // generateJobSets generates jobs of each task set in one hyperperiod
-func generateJobSet(taskPath string, priorityAssignment int) {
+func generateJobSet(taskPath string, priorityAssignment int, outputFormat string) {
 	// first let's see we have a prec file or not
-	precPath := taskPath[:len(taskPath)-4] + ".prec.csv"
+	precPath := taskPath[:strings.LastIndex(taskPath, ".")] + ".prec." + outputFormat
 	if _, err := os.Stat(precPath); err == nil {
 		// read the precedence graph
-		precGraph, err := common.ReadVertexSet(precPath)
+		var precGraph common.VertexSet
+		var err error
+
+		// first we have to read the task set
+		if outputFormat == "csv" {
+			precGraph, err = common.ReadVertexSet(precPath)
+		} else {
+			precGraph, err = common.ReadVertexSetYAML(precPath)
+		}
+
 		if err != nil {
 			logger.LogFatal("Error reading precedence graph: " + err.Error())
 		}
+
 		// print the number of vertices
 		logger.LogInfo("Number of vertices in the precedence graph: " + strconv.Itoa(len(precGraph)))
 		// print the vertices
@@ -100,28 +111,44 @@ func generateJobSet(taskPath string, priorityAssignment int) {
 		// add jobset before the file name
 		mainPath = filepath.Join(mainPath, "jobset-"+fileName)
 
-		// create the whole path
-		err = os.MkdirAll(filepath.Dir(mainPath), os.ModePerm)
-		err = jobSet.WriteJobSet(mainPath)
-		if err != nil {
-			logger.LogFatal("Error writing job set: " + err.Error())
-		}
-
 		// Now we have to create the precedence file
 		// first add .prec before the file format
-		precPath = mainPath[:len(mainPath)-4] + ".prec.csv"
+		precPath = mainPath[:strings.LastIndex(mainPath, ".")] + ".prec." + outputFormat
 
 		// create the whole path
+		err = os.MkdirAll(filepath.Dir(mainPath), os.ModePerm)
+
+		// create the whole path for the precedence file
 		err = os.MkdirAll(filepath.Dir(precPath), os.ModePerm)
-		err = jobSet.WriteDependencyJobSet(precPath)
-		if err != nil {
-			logger.LogFatal("Error writing precedence graph: " + err.Error())
+
+		if outputFormat == "csv" {
+			err = jobSet.WriteJobSet(mainPath)
+			if err != nil {
+				logger.LogFatal("Error writing job set: " + err.Error())
+			}
+			err = jobSet.WriteDependencyJobSet(precPath)
+			if err != nil {
+				logger.LogFatal("Error writing precedence graph: " + err.Error())
+			}
+		} else {
+			err = jobSet.WriteJobSetYAML(mainPath)
+			if err != nil {
+				logger.LogFatal("Error writing job set: " + err.Error())
+			}
 		}
 
 	} else {
 
 		// first we have to read the task set
-		tasks, err := common.ReadTaskSet(taskPath)
+		var tasks common.TaskSet
+		var err error
+
+		if outputFormat == "csv" {
+			tasks, err = common.ReadTaskSet(taskPath)
+		} else {
+			tasks, err = common.ReadTaskSetYAML(taskPath)
+		}
+
 		if err != nil {
 			logger.LogFatal("Error reading task set: " + err.Error())
 		}
@@ -189,7 +216,11 @@ func generateJobSet(taskPath string, priorityAssignment int) {
 
 		// create the whole path
 		err = os.MkdirAll(filepath.Dir(mainPath), os.ModePerm)
-		err = jobSet.WriteJobSet(mainPath)
+		if outputFormat == "csv" {
+			err = jobSet.WriteJobSet(mainPath)
+		} else {
+			err = jobSet.WriteJobSetYAML(mainPath)
+		}
 		if err != nil {
 			logger.LogFatal("Error writing job set: " + err.Error())
 		}
@@ -198,28 +229,9 @@ func generateJobSet(taskPath string, priorityAssignment int) {
 }
 
 // GenerateJobSets generates job sets for each task set in the task set folder
-func GenerateJobSets(taskSetPath string, priorityAssignment int) {
-	// first we have to find all the task sets with csv extension in
-	var taskSetPaths []string
-	err := filepath.Walk(taskSetPath, func(path string, info os.FileInfo, err error) error {
-		// check folder name to be "tasksets"
-		if filepath.Ext(path) == ".csv" && path[len(path)-9:] != ".prec.csv" &&
-			filepath.Base(filepath.Dir(path)) == "tasksets" {
-			taskSetPaths = append(taskSetPaths, path)
-		}
-		return nil
-	})
-
-	if err != nil {
-		logger.LogFatal("Cannot find any task set in the folder: " + taskSetPath)
-	} else {
-		// print the number of task sets
-		logger.LogInfo("Number of founded task sets: " + strconv.Itoa(len(taskSetPaths)))
-	}
-
-	if err != nil {
-		logger.LogFatal("Cannot find any task set in the folder: " + taskSetPath)
-	}
+func GenerateJobSets(taskSetPath string, priorityAssignment int, outputFormat string) {
+	// first we have to find all the task sets
+	taskSetPaths := findTaskSetPaths(taskSetPath, outputFormat)
 
 	// now we have to generate the job sets
 	for _, taskSetPath := range taskSetPaths {
@@ -236,7 +248,7 @@ func GenerateJobSets(taskSetPath string, priorityAssignment int) {
 		mainPath = filepath.Join(mainPath, "jobset-"+fileName)
 		if _, err := os.Stat(mainPath); os.IsNotExist(err) {
 			logger.LogInfo("Generating job set for: " + taskSetPath)
-			generateJobSet(taskSetPath, priorityAssignment)
+			generateJobSet(taskSetPath, priorityAssignment, outputFormat)
 		} else {
 			logger.LogInfo("Job set for " + taskSetPath + " exists")
 		}
@@ -244,24 +256,9 @@ func GenerateJobSets(taskSetPath string, priorityAssignment int) {
 }
 
 // GenerateJobSetsParallel generates job sets for each task set in the task set folder in parallel
-func GenerateJobSetsParallel(taskSetPath string, priorityAssignment int) {
+func GenerateJobSetsParallel(taskSetPath string, priorityAssignment int, outputFormat string) {
 	// first we have to find all the task sets with csv extension in
-	var taskSetPaths []string
-	err := filepath.Walk(taskSetPath, func(path string, info os.FileInfo, err error) error {
-		// check folder name to be "tasksets"
-		if filepath.Ext(path) == ".csv" && path[len(path)-9:] != ".prec.csv" &&
-			filepath.Base(filepath.Dir(path)) == "tasksets" {
-			taskSetPaths = append(taskSetPaths, path)
-		}
-		return nil
-	})
-
-	if err != nil {
-		logger.LogFatal("Cannot find any task set in the folder: " + taskSetPath)
-	} else {
-		// print the number of task sets
-		logger.LogInfo("Number of founded task sets: " + strconv.Itoa(len(taskSetPaths)))
-	}
+	taskSetPaths := findTaskSetPaths(taskSetPath, outputFormat)
 
 	// now we have to generate the job sets in parallel
 	var wg sync.WaitGroup
@@ -281,7 +278,7 @@ func GenerateJobSetsParallel(taskSetPath string, priorityAssignment int) {
 			// add jobset before the file name
 			mainPath = filepath.Join(mainPath, "jobset-"+fileName)
 			if _, err := os.Stat(mainPath); os.IsNotExist(err) {
-				generateJobSet(taskSetPaths[setIndex], priorityAssignment)
+				generateJobSet(taskSetPaths[setIndex], priorityAssignment, outputFormat)
 			} else {
 				logger.LogInfo("Job set for " + taskSetPaths[setIndex] + " exists")
 			}
