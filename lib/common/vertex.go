@@ -84,7 +84,10 @@ func ReadVertexSet(path string) (VertexSet, error) {
 		tempDeadline, _ := strconv.Atoi(record[6])
 		// for successors, we have to first remove the brackets
 		tempSc := record[7][1 : len(record[7])-1]
-		tempSuccessors := strings.Split(tempSc, ",")
+		tempSuccessors := []string{}
+		if len(strings.TrimSpace(tempSc)) != 0 {
+			tempSuccessors = strings.Split(tempSc, ",")
+		}
 
 		var successors []int
 		for _, successor := range tempSuccessors {
