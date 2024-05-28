@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"math"
 	"math/rand"
 )
 
@@ -13,7 +14,9 @@ func uunifastDiscard(numTask int, utilization float64, taskUtilizationLimit floa
 		utilizationValues = make([]float64, numTask)
 		sumU := utilization
 		for i := 0; i < numTask-1; i++ {
-			nextSumU := sumU * rand.Float64() * (1.0 / float64(numTask-i))
+			//generate a random number between 0 and 1
+			r := float64(rand.Float32())
+			nextSumU := sumU * math.Pow(r, 1.0/float64(numTask-(i+1)))
 			utilizationValues[i] = sumU - nextSumU
 			sumU = nextSumU
 		}
