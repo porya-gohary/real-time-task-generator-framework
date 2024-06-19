@@ -117,6 +117,8 @@ func main() {
 			} else if config.DAGType == "random" {
 				lib.GenerateRandomDAGsParallel(config.Path, config.NumRoots, config.MaxBranch, config.MaxDepth,
 					config.MakeDotFile, config.OutputFormat)
+			} else if config.DAGType == "chain" {
+				lib.GenerateTaskChainsParallel(config.Path, config.MakeDotFile, config.OutputFormat)
 			} else {
 				logger.LogFatal("Invalid DAG type")
 			}
@@ -127,6 +129,8 @@ func main() {
 			} else if config.DAGType == "random" {
 				lib.GenerateRandomDAGs(config.Path, config.NumRoots, config.MaxBranch, config.MaxDepth,
 					config.MakeDotFile, config.OutputFormat)
+			} else if config.DAGType == "chain" {
+				lib.GenerateTaskChains(config.Path, config.MakeDotFile, config.OutputFormat)
 			} else {
 				logger.LogFatal("Invalid DAG type")
 			}

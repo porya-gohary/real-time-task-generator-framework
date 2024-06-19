@@ -34,7 +34,7 @@ mapping_heuristic: 0
 generate_dags: true
 # Generate Dot file for the DAGs
 generate_dot: true
-# DAG type to generate: "fork-join", "random"
+# DAG type to generate: "fork-join", "random", "chain"
 # NOTE: in "fork-join" DAGs, each task generates a fork-join graph
 dag_type: "fork-join"
 # probability of forking a vertex in the DAG (only for fork-join DAGs)

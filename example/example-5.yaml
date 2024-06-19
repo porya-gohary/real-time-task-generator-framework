@@ -1,59 +1,61 @@
 # Output path for the generated task sets
 path: "output"
 # output file format: "yaml", "csv"
-output_format: "csv"
+output_format: "yaml"
 # Number of cores for the task sets
 number_of_cores: 4
 # Utilization distribution to generate task sets: "uunifast", "rand-fixed-sum", "automotive"
-utilization_distribution: "uunifast"
+utilization_distribution: "rand-fixed-sum"
+# Utilization bound for each task (only for rand-fixed-sum)
+utilization_bound: [0.01, 0.9]
 # Mathematical distribution to generate periods: "uniform", "log-uniform",
 # "uniform-discrete" ,"log-uniform-discrete", "automotive"
-period_distribution: "uniform-discrete"
+period_distribution: "log-uniform-discrete"
 # Minimum and maximum period for the period distribution
-period_range: [1000, 10000]
+period_range: [10000, 100000]
 # Discrete periods for the period distribution
-periods: [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]
+periods: [10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000, 55000, 60000, 65000, 70000, 75000, 80000, 85000, 90000, 95000, 100000]
 # Number of task sets
-num_sets: 100
+num_sets: 200
 # Number of tasks in the task set
-tasks: 5
+tasks: 6
 # Utilization of the task set
-utilization: 0.8
+utilization: 1.6
 # Execution time variation in percentage of the execution time
 exec_variation: 0.1
 # Jitter in percentage of the period for variable jitter and in time units for constant jitter
-jitter: 0.1
+jitter: 0.00
 # Constant or variable jitter
 constant_jitter: false
 # maximum number of jobs per task set
-max_jobs: 1000
+max_jobs: 10000
 # mapping heuristic to use 0. No mapping, 1. Worst-fit, 2. Best-fit, 3. First-fit
-mapping_heuristic: 0
+mapping_heuristic: 2
 # ---------------------------------------------------------------------
 # Generate DAGs from the task sets
-generate_dags: false
+generate_dags: true
 # Generate Dot file for the DAGs
-generate_dot: false
+generate_dot: true
 # DAG type to generate: "fork-join", "random", "chain"
 # NOTE: in "fork-join" DAGs, each task generates a fork-join graph
-dag_type: "fork-join"
+dag_type: "chain"
 # probability of forking a vertex in the DAG (only for fork-join DAGs)
-fork_probability: 0.5
+fork_probability: 0.4
 # probability of adding edge between vertices in the DAG (only for fork-join DAGs)
-edge_probability: 0.5
+edge_probability: 0.4
 # maximum number of branches per fork
-max_branches: 3
+max_branches: 1
 # maximum number of vertices in the DAG (only for fork-join DAGs)
 max_vertices: 10
 # Number of root vertices in the DAG (only for random DAGs)
 num_roots: 1
 # maximum depth of the DAG
-max_depth: 3
+max_depth: 5
 # ---------------------------------------------------------------------
 # Generate job sets from the task sets
 generate_job_sets: false
 # Priority assignment algorithm: "RM", "DM", "EDF" (only for the job sets)
-priority_assignment: "RM"
+priority_assignment: "EDF"
 # Run task set generation in parallel
 run_parallel: true
 # Verbose level: 0 - 4 (0: no output, 4: all output)

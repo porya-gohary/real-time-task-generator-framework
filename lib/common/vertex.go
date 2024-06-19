@@ -51,6 +51,19 @@ func (vs *VertexSet) GenerateDotFile(name string, offset int) string {
 	return str
 }
 
+// Sort sorts the vertex set based on the vertex ID
+func (vs *VertexSet) Sort() {
+	// sort the vertex set
+	for i := 0; i < len(*vs); i++ {
+		for j := i + 1; j < len(*vs); j++ {
+			if (*vs)[i].VertexID > (*vs)[j].VertexID {
+				(*vs)[i], (*vs)[j] = (*vs)[j], (*vs)[i]
+			}
+		}
+	}
+
+}
+
 // ReadVertexSet reads a vertex set from a file
 func ReadVertexSet(path string) (VertexSet, error) {
 	// read the vertex set from the CSV file
