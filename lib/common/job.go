@@ -31,7 +31,7 @@ func (js JobSet) WriteJobSet(path string) error {
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 
-	headers := []string{"Task ID", "Job ID", "Arrival min", "Arrival max", "Cost min", "Cost max", "Deadline", "Priority"}
+	headers := []string{"Task ID", "Job ID", "Arrival min", "Arrival max", "Cost min", "Cost max", "Deadline", "Priority", "Type"}
 	writer.Write(headers)
 
 	for _, job := range js {
@@ -58,6 +58,9 @@ func (js JobSet) WriteJobSet(path string) error {
 			strconv.Itoa(job.AbsoluteDeadline),
 			strconv.Itoa(job.Priority),
 		}...)
+		if job.Vertex != nil {
+			row = append(row, strconv.Itoa(job.Vertex.Type))
+		}
 
 		if err := writer.Write(row); err != nil {
 			return err
@@ -139,6 +142,9 @@ func (js JobSet) WriteJobSetYAML(path string) error {
 		}
 		_, err = file.WriteString(fmt.Sprintf("    Deadline: %d\n", job.AbsoluteDeadline))
 		_, err = file.WriteString(fmt.Sprintf("    Priority: %d\n", job.Priority))
+		if job.Vertex != nil {
+			_, err = file.WriteString(fmt.Sprintf("    Type: %d\n", job.Vertex.Type))
+		}
 
 		if job.Vertex != nil {
 			// now we need to check if the job has dependencies

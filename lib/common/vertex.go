@@ -20,6 +20,9 @@ type Vertex struct {
 	Predecessors []int
 	Successors   []int
 	Depth        int
+	// vertex type
+	// 0: normal vertex (default), 1: entry vertex, 2: exit vertex
+	Type int
 }
 
 type VertexSet []*Vertex
@@ -34,8 +37,27 @@ func (vs *VertexSet) GenerateDotFile(name string, offset int) string {
 
 	// write the vertices
 	for _, vertex := range *vs {
+		shape := "shape="
+		color := "color="
+		// determine the shape abd color of the node based on the type of the vertex
+		if vertex.Type == 0 {
+			// normal vertex
+			// shape: circle, color: blue
+			shape += "circle, "
+			color += "blue, "
+		} else if vertex.Type == 1 {
+			// entry vertex
+			// shape: diamond, color: red
+			shape += "diamond, "
+			color += "red, "
+		} else if vertex.Type == 2 {
+			// exit vertex
+			// shape: diamond, color: green
+			shape += "diamond, "
+			color += "green, "
+		}
 		name := "V" + strconv.Itoa(vertex.VertexID+offset)
-		str += "\t" + strconv.Itoa(vertex.VertexID+offset) + " [label=\"" + name + "\"];\n"
+		str += "\t" + strconv.Itoa(vertex.VertexID+offset) + " [" + shape + color + "label=\"" + name + "\"];\n"
 	}
 
 	// write the edges
@@ -95,11 +117,22 @@ func ReadVertexSet(path string) (VertexSet, error) {
 		tempWCET, _ := strconv.Atoi(record[4])
 		tempPeriod, _ := strconv.Atoi(record[5])
 		tempDeadline, _ := strconv.Atoi(record[6])
-		// for successors, we have to first remove the brackets
-		tempSc := record[7][1 : len(record[7])-1]
-		tempSuccessors := []string{}
-		if len(strings.TrimSpace(tempSc)) != 0 {
-			tempSuccessors = strings.Split(tempSc, ",")
+		var tempSuccessors []string
+		var tempType int = 0
+		if len(record) < 8 {
+			// for successors, we have to first remove the brackets
+			tempSc := record[7][1 : len(record[7])-1]
+			if len(strings.TrimSpace(tempSc)) != 0 {
+				tempSuccessors = strings.Split(tempSc, ",")
+			}
+		} else {
+			// we have type information
+			tempType, _ = strconv.Atoi(record[7])
+			// for successors, we have to first remove the brackets
+			tempSc := record[8][1 : len(record[8])-1]
+			if len(strings.TrimSpace(tempSc)) != 0 {
+				tempSuccessors = strings.Split(tempSc, ",")
+			}
 		}
 
 		var successors []int
@@ -116,6 +149,7 @@ func ReadVertexSet(path string) (VertexSet, error) {
 			WCET:       tempWCET,
 			Period:     tempPeriod,
 			Deadline:   tempDeadline,
+			Type:       tempType,
 			Successors: successors,
 		})
 	}
@@ -149,6 +183,11 @@ func ReadVertexSetYAML(path string) (VertexSet, error) {
 		tempWCET := int(vertex["WCET"].(int))
 		tempPeriod := int(vertex["Period"].(int))
 		tempDeadline := int(vertex["Deadline"].(int))
+		// if the type is not specified, we assume it is a normal vertex
+		tempType := 0
+		if _, ok := vertex["Type"]; ok {
+			tempType = int(vertex["Type"].(int))
+		}
 
 		var successors []int
 		for _, successor := range vertex["Successors"].([]interface{}) {
@@ -163,6 +202,7 @@ func ReadVertexSetYAML(path string) (VertexSet, error) {
 			WCET:       tempWCET,
 			Period:     tempPeriod,
 			Deadline:   tempDeadline,
+			Type:       tempType,
 			Successors: successors,
 		})
 

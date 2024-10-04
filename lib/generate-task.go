@@ -123,6 +123,29 @@ func createTaskSet(path string, numCore, nTasks int, seed int64, totalUtilizatio
 				}
 			}
 		}
+
+		// check the necessary test for non-preemptive scheduling
+		// first we have to find task with minimum slack
+		minSlack := 1000000000
+		for _, task := range tasks {
+			slack := task.Period - task.WCET - task.Jitter
+			if slack < minSlack {
+				minSlack = slack
+			}
+		}
+		// now we have to see if we have m task with execution time greater than minSlack
+		m := 0
+		for _, task := range tasks {
+			if task.WCET > minSlack {
+				m++
+			}
+		}
+
+		if m > numCore {
+			flag = false
+			logger.LogInfo("Regenerating task set because of non-preemptive scheduling")
+		}
+
 		if flag {
 			break
 		}

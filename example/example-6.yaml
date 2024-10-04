@@ -1,13 +1,11 @@
 # Output path for the generated task sets
 path: "output"
 # output file format: "yaml", "csv"
-output_format: "yaml"
+output_format: "csv"
 # Number of cores for the task sets
 number_of_cores: 4
 # Utilization distribution to generate task sets: "uunifast", "rand-fixed-sum", "automotive"
 utilization_distribution: "rand-fixed-sum"
-# Utilization bound for each task (only for rand-fixed-sum)
-utilization_bound: [0.1, 0.9]
 # Mathematical distribution to generate periods: "uniform", "log-uniform",
 # "uniform-discrete" ,"log-uniform-discrete", "automotive"
 period_distribution: "uniform-discrete"
@@ -16,21 +14,21 @@ period_range: [1000, 20000]
 # Discrete periods for the period distribution
 periods: [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000, 15000, 16000, 17000, 18000, 19000, 20000]
 # Number of task sets
-num_sets: 200
+num_sets: 2
 # Number of tasks in the task set
-tasks: 12
+tasks: 10
 # Utilization of the task set
-utilization: 1.2
+utilization: 1.8
 # Execution time variation in percentage of the execution time
 exec_variation: 0.1
 # Jitter in percentage of the period for variable jitter and in time units for constant jitter
-jitter: 0.01
+jitter: 0.1
 # Constant or variable jitter
 constant_jitter: false
 # maximum number of jobs per task set
-max_jobs: 5000
+max_jobs: 1000
 # mapping heuristic to use 0. No mapping, 1. Worst-fit, 2. Best-fit, 3. First-fit
-mapping_heuristic: 2
+mapping_heuristic: 0
 # ---------------------------------------------------------------------
 # Generate DAGs from the task sets
 generate_dags: true
@@ -38,26 +36,26 @@ generate_dags: true
 generate_dot: true
 # DAG type to generate: "fork-join", "conditional", "random", "chain"
 # NOTE: in "fork-join" DAGs, each task generates a fork-join graph
-dag_type: "random"
+dag_type: "conditional"
 # probability of forking a vertex in the DAG (only for fork-join and conditional DAGs)
 fork_probability: 0.5
 # probability of adding conditional branch in the DAG (only for conditional DAGs)
-cond_probability: 0.0
-# probability of adding edge between vertices in the DAG (only for fork-join DAGs)
+cond_probability: 0.5
+# probability of adding edge between vertices in the DAG (only for fork-join)
 edge_probability: 0.5
 # maximum number of branches per fork
 max_branches: 3
 # maximum number of conditional branches per fork (only for conditional DAGs)
-max_cond_branches: 0
-# maximum number of vertices in the DAG (only for fork-join DAGs)
+max_cond_branches: 2
+# maximum number of vertices in the DAG (only for fork-join and conditional DAGs)
 max_vertices: 10
 # Number of root vertices in the DAG (only for random DAGs)
-num_roots: 2
+num_roots: 1
 # maximum depth of the DAG
-max_depth: 6
+max_depth: 3
 # ---------------------------------------------------------------------
 # Generate job sets from the task sets
-generate_job_sets: false
+generate_job_sets: true
 # Priority assignment algorithm: "RM", "DM", "EDF" (only for the job sets)
 priority_assignment: "RM"
 # Run task set generation in parallel

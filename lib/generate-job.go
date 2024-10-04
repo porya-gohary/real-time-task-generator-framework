@@ -92,7 +92,8 @@ func generateJobSet(taskPath string, priorityAssignment int, outputFormat string
 					strconv.Itoa(jobSet[len(jobSet)-1].Vertex.BCET) + " " +
 					strconv.Itoa(jobSet[len(jobSet)-1].Vertex.WCET) + " " +
 					strconv.Itoa(jobSet[len(jobSet)-1].AbsoluteDeadline) + " " +
-					strconv.Itoa(jobSet[len(jobSet)-1].Priority))
+					strconv.Itoa(jobSet[len(jobSet)-1].Priority) + " " +
+					strconv.Itoa(jobSet[len(jobSet)-1].Vertex.Type))
 
 				uniqueID++
 			}

@@ -32,8 +32,10 @@ type Config struct {
 	MakeDotFile        bool      `yaml:"generate_dot"`
 	DAGType            string    `yaml:"dag_type"`
 	ForkProb           float64   `yaml:"fork_probability"`
+	CondProb           float64   `yaml:"cond_probability"`
 	EdgeProb           float64   `yaml:"edge_probability"`
 	MaxBranch          int       `yaml:"max_branches"`
+	MaxCondBranch      int       `yaml:"max_cond_branches"`
 	MaxVertices        int       `yaml:"max_vertices"`
 	NumRoots           int       `yaml:"num_roots"`
 	MaxDepth           int       `yaml:"max_depth"`
@@ -113,7 +115,10 @@ func main() {
 		if config.RunParallel {
 			if config.DAGType == "fork-join" {
 				lib.GenerateDAGSetsParallel(config.Path, config.ForkProb, config.EdgeProb, config.MaxBranch,
-					config.MaxVertices, config.MaxDepth, config.MakeDotFile, config.OutputFormat)
+					config.MaxVertices, config.MaxDepth, false, 0, 0, config.MakeDotFile, config.OutputFormat)
+			} else if config.DAGType == "conditional" {
+				lib.GenerateDAGSetsParallel(config.Path, config.ForkProb, config.EdgeProb, config.MaxBranch,
+					config.MaxVertices, config.MaxDepth, true, config.CondProb, config.MaxCondBranch, config.MakeDotFile, config.OutputFormat)
 			} else if config.DAGType == "random" {
 				lib.GenerateRandomDAGsParallel(config.Path, config.NumRoots, config.MaxBranch, config.MaxDepth,
 					config.MakeDotFile, config.OutputFormat)
@@ -125,7 +130,10 @@ func main() {
 		} else {
 			if config.DAGType == "fork-join" {
 				lib.GenerateDAGSets(config.Path, config.ForkProb, config.EdgeProb, config.MaxBranch, config.MaxVertices,
-					config.MaxDepth, config.MakeDotFile, config.OutputFormat)
+					config.MaxDepth, false, 0, 0, config.MakeDotFile, config.OutputFormat)
+			} else if config.DAGType == "conditional" {
+				lib.GenerateDAGSets(config.Path, config.ForkProb, config.EdgeProb, config.MaxBranch, config.MaxVertices,
+					config.MaxDepth, true, config.CondProb, config.MaxCondBranch, config.MakeDotFile, config.OutputFormat)
 			} else if config.DAGType == "random" {
 				lib.GenerateRandomDAGs(config.Path, config.NumRoots, config.MaxBranch, config.MaxDepth,
 					config.MakeDotFile, config.OutputFormat)

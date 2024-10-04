@@ -18,7 +18,8 @@ import (
 //	https://retis.sssup.it/~d.casini/resources/DAG_Generator/cptasks.zip
 
 func expandDAG(vertices common.VertexSet, source, sink, depth, numBranches, maxParBranches,
-	maxVertices int, pPar float64) common.VertexSet {
+	maxVertices int, pPar float64, cDAG bool, pCond float64, maxCondBranches int, CondBranch bool) common.VertexSet {
+
 	parBranches := rand.Intn(maxParBranches-1) + 2
 
 	if source == 0 && sink == 0 {
@@ -28,7 +29,16 @@ func expandDAG(vertices common.VertexSet, source, sink, depth, numBranches, maxP
 
 		vertices = append(vertices, so, si)
 
-		vertices = expandDAG(vertices, 0, 1, depth-1, parBranches, maxParBranches, maxVertices, pPar)
+		// if it is a conditional DAG, we have to check the probability of having a conditional branch
+		r := rand.Float64()
+		if cDAG && r < pCond {
+			// generate the number of conditional branches between 2 and maxCondBranches
+			numCondBranches := rand.Intn(maxCondBranches-1) + 2
+			// call the function to generate the conditional branches
+			vertices = expandDAG(vertices, 0, 1, depth-1, parBranches, numCondBranches, maxVertices, pPar, cDAG, pCond, maxCondBranches, true)
+		} else {
+			vertices = expandDAG(vertices, 0, 1, depth-1, parBranches, maxParBranches, maxVertices, pPar, cDAG, pCond, maxCondBranches, false)
+		}
 	} else {
 		for i := 0; i < numBranches; i++ {
 			current := len(vertices)
@@ -41,22 +51,52 @@ func expandDAG(vertices common.VertexSet, source, sink, depth, numBranches, maxP
 				vertices[current].Predecessors = []int{source}
 				vertices[current].Successors = []int{sink}
 				vertices[current].Depth = depth
+				vertices[current].Type = 0
 
 				vertices[source].Successors = append(vertices[source].Successors, current)
 				vertices[sink].Predecessors = append(vertices[sink].Predecessors, current)
+
+				// determine vertex type of the source and sink vertices
+				if CondBranch {
+					vertices[source].Type = 1
+					vertices[sink].Type = 2
+				} else {
+					vertices[source].Type = 0
+					vertices[sink].Type = 0
+				}
 			} else {
 				vertices = append(vertices, &common.Vertex{VertexID: current + 1})
 
 				vertices[current].Predecessors = []int{source}
 				vertices[source].Successors = append(vertices[source].Successors, current)
+				vertices[current].Type = 0
 
 				vertices[current+1].Successors = []int{sink}
 				vertices[sink].Predecessors = append(vertices[sink].Predecessors, current+1)
+				vertices[current+1].Type = 0
 
 				vertices[current].Depth = depth
 				vertices[current+1].Depth = -depth
 
-				vertices = expandDAG(vertices, current, current+1, depth-1, parBranches, maxParBranches, maxVertices, pPar)
+				// determine vertex type of the source and sink vertices
+				if CondBranch {
+					vertices[source].Type = 1
+					vertices[sink].Type = 2
+				} else {
+					vertices[source].Type = 0
+					vertices[sink].Type = 0
+				}
+				// if it is a conditional DAG, we have to check the probability of having a conditional branch
+				r := rand.Float64()
+				if cDAG && r < pCond {
+					// generate the number of conditional branches between 2 and maxCondBranches
+					numCondBranches := rand.Intn(maxCondBranches-1) + 2
+					// call the function to generate the conditional branches
+					vertices = expandDAG(vertices, current, current+1, depth-1, parBranches, numCondBranches, maxVertices, pPar, cDAG, pCond, maxCondBranches, true)
+				} else {
+					vertices = expandDAG(vertices, current, current+1, depth-1, parBranches, maxParBranches, maxVertices, pPar, cDAG, pCond, maxCondBranches, false)
+				}
+
 			}
 		}
 	}
@@ -137,11 +177,14 @@ func generateBCET(totalBCET, totalWCET int, wcetList []int) []int {
 
 	return bcetList
 }
-func generateDAGFromTask(task common.Task, pPar, pAdd float64, maxParBranches, maxVertices, maxDepth int) common.VertexSet {
+func generateDAGFromTask(task common.Task, pPar, pAdd float64, maxParBranches, maxVertices, maxDepth int, cDAG bool, pCond float64, maxCondBranches int) common.VertexSet {
 
 	vertices := common.VertexSet{}
-	vertices = expandDAG(vertices, 0, 0, maxDepth, 1, maxParBranches, maxVertices, pPar)
-	vertices = addRandomEdgesToDAG(vertices, pAdd)
+	vertices = expandDAG(vertices, 0, 0, maxDepth, 1, maxParBranches, maxVertices, pPar, cDAG, pCond, maxCondBranches, false)
+	if !cDAG {
+		// currently we only add random edges to the DAG if it is not a conditional DAG
+		vertices = addRandomEdgesToDAG(vertices, pAdd)
+	}
 	wcetList := generateRandomSum(len(vertices), task.WCET)
 	bcetList := generateBCET(task.BCET, task.WCET, wcetList)
 
@@ -154,7 +197,7 @@ func generateDAGFromTask(task common.Task, pPar, pAdd float64, maxParBranches, m
 	return vertices
 }
 
-func generateDAGSet(taskPath string, pPar, pAdd float64, maxParBranches, maxVertices, maxDepth int,
+func generateDAGSet(taskPath string, pPar, pAdd float64, maxParBranches, maxVertices, maxDepth int, cDAG bool, pCond float64, maxCondBranches int,
 	makeDotFile bool, outputFormat string) {
 	var taskSet common.TaskSet
 	var err error
@@ -187,21 +230,32 @@ func generateDAGSet(taskPath string, pPar, pAdd float64, maxParBranches, maxVert
 	if outputFormat == "csv" {
 		// write the job set to a file
 		writer := csv.NewWriter(file)
-		writer.Write([]string{"Task ID", "Vertex ID", "Jitter", "BCET", "WCET", "Period", "Deadline", "Successors"})
+		if cDAG {
+			writer.Write([]string{"Task ID", "Vertex ID", "Jitter", "BCET", "WCET", "Period", "Deadline", "Type", "Successors"})
+		} else {
+			writer.Write([]string{"Task ID", "Vertex ID", "Jitter", "BCET", "WCET", "Period", "Deadline", "Successors"})
+		}
 
 		defer writer.Flush()
 
 		vertexIDCounter := 0
 		for _, task := range taskSet {
-			newDAG := generateDAGFromTask(*task, pPar, pAdd, maxParBranches, maxVertices, maxDepth)
+			newDAG := generateDAGFromTask(*task, pPar, pAdd, maxParBranches, maxVertices, maxDepth, cDAG, pCond, maxCondBranches)
 			// first we have to write the task
 			if makeDotFile {
-				dotFile += newDAG.GenerateDotFile("T"+string(task.TaskID), vertexIDCounter)
+				dotFile += newDAG.GenerateDotFile("T"+strconv.Itoa(task.TaskID), vertexIDCounter)
 			}
 			for _, vertex := range newDAG {
-				lineTemp := []string{strconv.Itoa(vertex.TaskID), strconv.Itoa(vertex.VertexID + vertexIDCounter),
-					strconv.Itoa(vertex.Jitter), strconv.Itoa(vertex.BCET), strconv.Itoa(vertex.WCET),
-					strconv.Itoa(task.Period), strconv.Itoa(task.Deadline)}
+				var lineTemp []string
+				if cDAG {
+					lineTemp = []string{strconv.Itoa(vertex.TaskID), strconv.Itoa(vertex.VertexID + vertexIDCounter),
+						strconv.Itoa(vertex.Jitter), strconv.Itoa(vertex.BCET), strconv.Itoa(vertex.WCET),
+						strconv.Itoa(task.Period), strconv.Itoa(task.Deadline), strconv.Itoa(vertex.Type)}
+				} else {
+					lineTemp = []string{strconv.Itoa(vertex.TaskID), strconv.Itoa(vertex.VertexID + vertexIDCounter),
+						strconv.Itoa(vertex.Jitter), strconv.Itoa(vertex.BCET), strconv.Itoa(vertex.WCET),
+						strconv.Itoa(task.Period), strconv.Itoa(task.Deadline)}
+				}
 
 				succStr := "["
 				for _, succ := range vertex.Successors {
@@ -227,10 +281,10 @@ func generateDAGSet(taskPath string, pPar, pAdd float64, maxParBranches, maxVert
 		}
 		vertexIDCounter := 0
 		for _, task := range taskSet {
-			newDAG := generateDAGFromTask(*task, pPar, pAdd, maxParBranches, maxVertices, maxDepth)
+			newDAG := generateDAGFromTask(*task, pPar, pAdd, maxParBranches, maxVertices, maxDepth, cDAG, pCond, maxCondBranches)
 			// first we have to write the task
 			if makeDotFile {
-				dotFile += newDAG.GenerateDotFile("T"+string(task.TaskID), vertexIDCounter)
+				dotFile += newDAG.GenerateDotFile("T"+strconv.Itoa(task.TaskID), vertexIDCounter)
 			}
 			for _, vertex := range newDAG {
 				// write the vertex set to the file with yaml format
@@ -241,6 +295,7 @@ func generateDAGSet(taskPath string, pPar, pAdd float64, maxParBranches, maxVert
 				_, err = file.WriteString(fmt.Sprintf("    WCET: %d\n", vertex.WCET))
 				_, err = file.WriteString(fmt.Sprintf("    Period: %d\n", task.Period))
 				_, err = file.WriteString(fmt.Sprintf("    Deadline: %d\n", task.Deadline))
+				_, err = file.WriteString(fmt.Sprintf("    Type: %d\n", vertex.Type))
 				_, err = file.WriteString(fmt.Sprintf("    PE: %d\n", task.PE))
 
 				succStr := "["
@@ -312,7 +367,7 @@ func findTaskSetPaths(taskSetPath string, outputFormat string) []string {
 }
 
 // GenerateDAGSets generates DAG sets for each task set in the task set folder
-func GenerateDAGSets(taskSetPath string, pPar, pAdd float64, maxParBranches, maxVertices, maxDepth int,
+func GenerateDAGSets(taskSetPath string, pPar, pAdd float64, maxParBranches, maxVertices, maxDepth int, cDAG bool, pCond float64, maxCondBranches int,
 	makeDotFile bool, outputFormat string) {
 	// first we have to find all the task sets with csv extension in
 	taskSetPaths := findTaskSetPaths(taskSetPath, outputFormat)
@@ -323,7 +378,7 @@ func GenerateDAGSets(taskSetPath string, pPar, pAdd float64, maxParBranches, max
 		predPath := taskSetPath[:strings.LastIndex(taskSetPath, ".")] + ".prec." + outputFormat
 		if _, err := os.Stat(predPath); os.IsNotExist(err) {
 			logger.LogInfo("Generating DAG for: " + taskSetPath)
-			generateDAGSet(taskSetPath, pPar, pAdd, maxParBranches, maxVertices, maxDepth, makeDotFile, outputFormat)
+			generateDAGSet(taskSetPath, pPar, pAdd, maxParBranches, maxVertices, maxDepth, cDAG, pCond, maxCondBranches, makeDotFile, outputFormat)
 		} else {
 			logger.LogInfo(fmt.Sprintf("%s exists", predPath))
 		}
@@ -331,7 +386,7 @@ func GenerateDAGSets(taskSetPath string, pPar, pAdd float64, maxParBranches, max
 }
 
 // GenerateDAGSetsParallel generates DAG sets for each task set in the task set folder in parallel
-func GenerateDAGSetsParallel(taskSetPath string, pPar, pAdd float64, maxParBranches, maxVertices, maxDepth int,
+func GenerateDAGSetsParallel(taskSetPath string, pPar, pAdd float64, maxParBranches, maxVertices, maxDepth int, cDAG bool, pCond float64, maxCondBranches int,
 	makeDotFile bool, outputFormat string) {
 	// first we have to find all the task sets with csv extension in
 	taskSetPaths := findTaskSetPaths(taskSetPath, outputFormat)
@@ -347,7 +402,7 @@ func GenerateDAGSetsParallel(taskSetPath string, pPar, pAdd float64, maxParBranc
 			predPath := taskSetPaths[setIndex][:strings.LastIndex(taskSetPaths[setIndex], ".")] + ".prec." + outputFormat
 			if _, err := os.Stat(predPath); os.IsNotExist(err) {
 				logger.LogInfo("Generating DAG for: " + taskSetPaths[setIndex])
-				generateDAGSet(taskSetPaths[setIndex], pPar, pAdd, maxParBranches, maxVertices, maxDepth,
+				generateDAGSet(taskSetPaths[setIndex], pPar, pAdd, maxParBranches, maxVertices, maxDepth, cDAG, pCond, maxCondBranches,
 					makeDotFile, outputFormat)
 			} else {
 				logger.LogInfo(fmt.Sprintf("%s exists", predPath))
