@@ -119,7 +119,7 @@ func ReadVertexSet(path string) (VertexSet, error) {
 		tempDeadline, _ := strconv.Atoi(record[6])
 		var tempSuccessors []string
 		var tempType int = 0
-		if len(record) < 8 {
+		if len(record) < 9 {
 			// for successors, we have to first remove the brackets
 			tempSc := record[7][1 : len(record[7])-1]
 			if len(strings.TrimSpace(tempSc)) != 0 {
