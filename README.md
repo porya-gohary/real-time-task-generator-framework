@@ -56,6 +56,7 @@ The framework can be used to generate task sets with the following characteristi
 - Periodic tasks
 - Fork-join DAG tasks
 - Random DAG tasks
+- Multi-rate task chain
 
 To generate the periods of the tasks, the framework uses the following distribution functions:
 - Uniform distribution
