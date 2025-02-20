@@ -61,10 +61,12 @@ func createTaskSet(path string, numCore, nTasks int, seed int64, totalUtilizatio
 			// 4. Log-uniform discrete distribution
 			periods = generatePeriodsLogUniformDiscrete(nTasks, float64(periodRange[0]), float64(periodRange[1]), disPeriods)
 		} else if periodDist == "automotive" {
-			// 5. Automotive method
-			tasks := generateAutomotiveTaskSet(totalUtilization)
-			for _, task := range tasks {
-				periods = append(periods, task[0])
+			if utilDist != "automotive" {
+				// 5. Automotive method
+				tasks := generateAutomotiveTaskSet(totalUtilization)
+				for _, task := range tasks {
+					periods = append(periods, task[0])
+				}
 			}
 		} else {
 			logger.LogFatal(fmt.Sprintf("Unknown period distribution: %s", periodDist))
@@ -127,8 +129,10 @@ func createTaskSet(path string, numCore, nTasks int, seed int64, totalUtilizatio
 			break
 		}
 
-		if len(util) != nTasks || len(periods) != nTasks || len(tasks) != nTasks {
-			logger.LogFatal("Error generating task set")
+		if utilDist != "automotive" && periodDist != "automotive" {
+			if len(util) != nTasks || len(periods) != nTasks || len(tasks) != nTasks {
+				logger.LogFatal("Error generating task set")
+			}
 		}
 	}
 
