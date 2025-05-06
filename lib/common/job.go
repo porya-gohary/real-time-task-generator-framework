@@ -16,6 +16,7 @@ type Job struct {
 	LatestArrivalTime   int
 	Priority            int
 	AbsoluteDeadline    int
+	UniqueID            int
 }
 
 type JobSet []*Job
@@ -37,7 +38,7 @@ func (js JobSet) WriteJobSet(path string) error {
 	for _, job := range js {
 		row := []string{
 			strconv.Itoa(job.TaskID),
-			strconv.Itoa(job.JobID),
+			strconv.Itoa(job.UniqueID),
 			strconv.Itoa(job.EarliestArrivalTime),
 			strconv.Itoa(job.LatestArrivalTime),
 		}
@@ -94,7 +95,7 @@ func (js JobSet) WriteDependencyJobSet(path string) error {
 					continue
 				}
 				// we need to check if they belong to the same task, and they release at the same time
-				if tempJob.TaskID == successor && tempJob.AbsoluteDeadline == job.AbsoluteDeadline {
+				if tempJob.JobID == successor && tempJob.AbsoluteDeadline == job.AbsoluteDeadline {
 					successorIndex = append(successorIndex, i)
 				}
 			}
@@ -102,9 +103,9 @@ func (js JobSet) WriteDependencyJobSet(path string) error {
 		for _, successor := range successorIndex {
 			row := []string{
 				strconv.Itoa(job.TaskID),
-				strconv.Itoa(job.JobID),
+				strconv.Itoa(job.UniqueID),
 				strconv.Itoa(js[successor].TaskID),
-				strconv.Itoa(js[successor].JobID),
+				strconv.Itoa(js[successor].UniqueID),
 			}
 			if err := writer.Write(row); err != nil {
 				return err

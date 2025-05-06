@@ -53,7 +53,7 @@ func generateJobSet(taskPath string, priorityAssignment int, outputFormat string
 
 		// now first let's create the job set
 		jobSet := common.JobSet{}
-		uniqueID := 0
+		JobUniqueID := 0
 		for _, vertex := range precGraph {
 			// first we have to calculate the number of jobs
 			numJobs := hyperperiod / vertex.Period
@@ -76,12 +76,13 @@ func generateJobSet(taskPath string, priorityAssignment int, outputFormat string
 				// now we have to create the job
 				jobSet = append(jobSet, &common.Job{
 					Vertex:              vertex,
-					TaskID:              vertex.VertexID,
-					JobID:               uniqueID,
+					TaskID:              vertex.TaskID,
+					JobID:               vertex.VertexID,
 					EarliestArrivalTime: earliestArrivalTime,
 					LatestArrivalTime:   latestArrivalTime,
 					AbsoluteDeadline:    deadline,
 					Priority:            priority,
+					UniqueID:            JobUniqueID,
 				})
 
 				// print the job
@@ -93,9 +94,10 @@ func generateJobSet(taskPath string, priorityAssignment int, outputFormat string
 					strconv.Itoa(jobSet[len(jobSet)-1].Vertex.WCET) + " " +
 					strconv.Itoa(jobSet[len(jobSet)-1].AbsoluteDeadline) + " " +
 					strconv.Itoa(jobSet[len(jobSet)-1].Priority) + " " +
-					strconv.Itoa(jobSet[len(jobSet)-1].Vertex.Type))
+					strconv.Itoa(jobSet[len(jobSet)-1].Vertex.Type) + " " +
+					strconv.Itoa(jobSet[len(jobSet)-1].UniqueID))
 
-				uniqueID++
+				JobUniqueID++
 			}
 
 		}
